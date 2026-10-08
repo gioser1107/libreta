@@ -30,8 +30,11 @@ class MonthSummary extends Component
         $summary = $balance->summarize(auth()->user(), $this->year, $this->month);
         $moves = $this->movements($summary['incomes'], $summary['expenses']);
 
+        $previous = now()->setDate($this->year, $this->month, 1)->subMonth();
+
         return view('livewire.month-summary', [
             'months' => Calendar::MONTHS,
+            'carriedFrom' => Calendar::MONTHS[$previous->month],
             'summary' => $summary,
             'moves' => $moves,
             'recent' => $moves->take(8),

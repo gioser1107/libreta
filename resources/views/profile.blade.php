@@ -12,16 +12,7 @@
             <livewire:bank-manager />
 
             <section class="lb-panel lb-settings">
-                <button
-                    type="button"
-                    x-data="{ dark: document.documentElement.classList.contains('dark') }"
-                    @lb-theme.window="dark = !!$event.detail"
-                    @click="window.lbSetTheme(!dark, $event)"
-                    class="lb-row"
-                >
-                    <span>Tema</span>
-                    <span class="lb-row-value" x-text="dark ? 'Oscuro' : 'Claro'">{{ request()->cookie('lb-theme') === 'dark' ? 'Oscuro' : 'Claro' }}</span>
-                </button>
+                @include('layouts.partials.theme-toggle', ['variant' => 'row'])
 
                 <livewire:profile.manage-passkeys />
                 <livewire:profile.update-password-form />

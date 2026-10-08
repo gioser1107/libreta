@@ -319,6 +319,46 @@ html.dark .lb-logo {
     color: var(--muted);
 }
 
+.lb-switch {
+    --lb-switch-w: 2.75rem;
+    --lb-knob: 1.375rem;
+    --lb-pad: 0.125rem;
+    position: relative;
+    flex-shrink: 0;
+    width: var(--lb-switch-w);
+    height: calc(var(--lb-knob) + (var(--lb-pad) * 2));
+    border-radius: 999px;
+    background: var(--line-strong);
+    transition: background-color 0.2s ease;
+}
+
+.lb-switch.is-sm {
+    --lb-switch-w: 2.25rem;
+    --lb-knob: 1.05rem;
+    margin-left: auto;
+}
+
+.lb-switch-knob {
+    position: absolute;
+    top: var(--lb-pad);
+    left: var(--lb-pad);
+    width: var(--lb-knob);
+    height: var(--lb-knob);
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+html.dark .lb-switch {
+    background: var(--accent);
+}
+
+html.dark .lb-switch-knob {
+    background: var(--on-accent);
+    transform: translateX(calc(var(--lb-switch-w) - var(--lb-knob) - (var(--lb-pad) * 2)));
+}
+
 .lb-main {
     min-width: 0;
     flex: 1;

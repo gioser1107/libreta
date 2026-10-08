@@ -232,6 +232,8 @@ class PersonalLedgerTest extends TestCase
         $this->assertEqualsWithDelta(1.0, $summary['expense_pending_usd'], 0.001);
         $this->assertEqualsWithDelta(5.0, $summary['balance_usd'], 0.001);
         $this->assertEqualsWithDelta(500.0, $summary['balance_ves'], 0.001);
+        $this->assertEqualsWithDelta(0.0, $summary['opening_usd'], 0.001);
+        $this->assertEqualsWithDelta(5.0, $summary['available_usd'], 0.001);
 
         $component = Livewire::actingAs($user)
             ->test(MonthSummary::class)
@@ -260,6 +262,83 @@ class PersonalLedgerTest extends TestCase
             '/Mayor gasto<\/span>\s*<span class="lb-highlight-title">Comida<\/span>/',
             $html,
         );
+    }
+
+    public function test_a_later_month_shows_the_unspent_balance_beside_that_months_total(): void
+    {
+        $user = $this->usuario();
+        $other = $this->usuario();
+        $this->bcv('2026-09-10', 100, 110);
+
+        $this->actingAs($user);
+        app(RecordIncomeAction::class)->execute($user, [
+            'occurred_on' => '2026-09-10',
+            'concept' => 'Sueldo',
+            'category' => 'sueldo',
+            'currency' => 'USD',
+            'amount' => '150',
+            'notes' => null,
+        ]);
+        $this->actingAs($other);
+        app(RecordIncomeAction::class)->execute($other, [
+            'occurred_on' => '2026-09-10',
+            'concept' => 'Ajeno',
+            'category' => 'otro',
+            'currency' => 'USD',
+            'amount' => '500',
+            'notes' => null,
+        ]);
+
+        $summary = app(MonthBalanceService::class)->summarize($user, 2026, 10);
+
+        $this->assertEqualsWithDelta(0.0, $summary['balance_usd'], 0.001);
+        $this->assertEqualsWithDelta(150.0, $summary['opening_usd'], 0.001);
+        $this->assertEqualsWithDelta(15000.0, $summary['opening_ves'], 0.001);
+        $this->assertEqualsWithDelta(150.0, $summary['available_usd'], 0.001);
+
+        Livewire::actingAs($user)
+            ->test(MonthSummary::class)
+            ->set('month', 10)
+            ->set('year', 2026)
+            ->assertSee('Tienes')
+            ->assertSee('$ 150,00')
+            ->assertSee('Septiembre dejó')
+            ->assertSee('$ 0,00')
+            ->assertDontSee('Ajeno')
+            ->assertDontSee('$ 500,00')
+            ->assertDontSee('$ 650,00');
+    }
+
+    public function test_spending_in_the_later_month_reduces_what_the_previous_month_left(): void
+    {
+        $user = $this->usuario();
+        $this->actingAs($user);
+        $this->bcv('2026-09-10', 100, 110);
+
+        app(RecordIncomeAction::class)->execute($user, [
+            'occurred_on' => '2026-09-10',
+            'concept' => 'Sueldo',
+            'category' => 'sueldo',
+            'currency' => 'USD',
+            'amount' => '150',
+            'notes' => null,
+        ]);
+        app(RecordExpenseAction::class)->execute($user, [
+            'occurred_on' => '2026-10-02',
+            'concept' => 'Comida',
+            'category' => 'comida',
+            'currency' => 'USD',
+            'amount' => '40',
+            'payment_method' => 'zelle',
+            'status' => 'paid',
+            'notes' => null,
+        ]);
+
+        $summary = app(MonthBalanceService::class)->summarize($user, 2026, 10);
+
+        $this->assertEqualsWithDelta(150.0, $summary['opening_usd'], 0.001);
+        $this->assertEqualsWithDelta(-40.0, $summary['balance_usd'], 0.001);
+        $this->assertEqualsWithDelta(110.0, $summary['available_usd'], 0.001);
     }
 
     public function test_month_summary_states_when_the_month_has_no_movements(): void

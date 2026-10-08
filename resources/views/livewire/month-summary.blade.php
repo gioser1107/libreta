@@ -5,10 +5,16 @@
     </header>
 
     <div class="lb-top">
-    <section class="lb-hero" aria-label="Saldo del mes">
-        <p class="lb-hero-kicker">Saldo de {{ mb_strtolower($months[$month] ?? 'este mes') }}</p>
-        <p class="lb-hero-amount">{{ \App\Support\Money::format($summary['balance_usd'], 'USD') }}</p>
-        <p class="lb-hero-ves">{{ \App\Support\Money::format($summary['balance_ves'], 'VES') }}</p>
+    <section class="lb-hero" aria-label="{{ $summary['opening_usd'] != 0 || $summary['opening_ves'] != 0 ? 'Saldo acumulado' : 'Saldo del mes' }}">
+        @if($summary['opening_usd'] != 0 || $summary['opening_ves'] != 0)
+            <p class="lb-hero-kicker">Tienes</p>
+            <p class="lb-hero-amount">{{ \App\Support\Money::format($summary['available_usd'], 'USD') }}</p>
+            <p class="lb-hero-ves">{{ \App\Support\Money::format($summary['available_ves'], 'VES') }}</p>
+        @else
+            <p class="lb-hero-kicker">Saldo de {{ mb_strtolower($months[$month] ?? 'este mes') }}</p>
+            <p class="lb-hero-amount">{{ \App\Support\Money::format($summary['balance_usd'], 'USD') }}</p>
+            <p class="lb-hero-ves">{{ \App\Support\Money::format($summary['balance_ves'], 'VES') }}</p>
+        @endif
 
         @if($summary['income_usd'] > 0 || $summary['expense_usd'] > 0)
             <div class="lb-splitbar" aria-hidden="true">
@@ -19,6 +25,10 @@
                 <span>Ingresos {{ \App\Support\Money::format($summary['income_usd'], 'USD') }}</span>
                 <span>Egresos {{ \App\Support\Money::format($summary['expense_usd'], 'USD') }}</span>
             </div>
+        @endif
+
+        @if($summary['opening_usd'] != 0 || $summary['opening_ves'] != 0)
+            <p class="lb-hero-note">{{ $carriedFrom }} dejó {{ \App\Support\Money::format($summary['opening_usd'], 'USD') }}<br>{{ $months[$month] }} {{ \App\Support\Money::format($summary['balance_usd'], 'USD') }}</p>
         @endif
 
         @if($pace['caption'])

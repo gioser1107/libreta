@@ -22,6 +22,10 @@ class MonthBalanceService
      *     expense_pending_usd: float,
      *     balance_usd: float,
      *     balance_ves: float,
+     *     opening_usd: float,
+     *     opening_ves: float,
+     *     available_usd: float,
+     *     available_ves: float,
      *     incomes: Collection<int, Income>,
      *     expenses: Collection<int, Expense>
      * }
@@ -41,6 +45,9 @@ class MonthBalanceService
         $expenseVes = round((float) (clone $expenses)->sum('amount_ves'), 2);
         $paidUsd = round((float) (clone $expenses)->where('status', Expense::STATUS_PAID)->sum('amount_usd'), 2);
         $pendingUsd = round((float) (clone $expenses)->where('status', Expense::STATUS_PENDING)->sum('amount_usd'), 2);
+        $balanceUsd = round($incomeUsd - $expenseUsd, 2);
+        $balanceVes = round($incomeVes - $expenseVes, 2);
+        $opening = $this->openingBalance($user, $from);
 
         return [
             'from' => $from,
@@ -51,10 +58,32 @@ class MonthBalanceService
             'expense_ves' => $expenseVes,
             'expense_paid_usd' => $paidUsd,
             'expense_pending_usd' => $pendingUsd,
-            'balance_usd' => round($incomeUsd - $expenseUsd, 2),
-            'balance_ves' => round($incomeVes - $expenseVes, 2),
+            'balance_usd' => $balanceUsd,
+            'balance_ves' => $balanceVes,
+            'opening_usd' => $opening['usd'],
+            'opening_ves' => $opening['ves'],
+            'available_usd' => round($opening['usd'] + $balanceUsd, 2),
+            'available_ves' => round($opening['ves'] + $balanceVes, 2),
             'incomes' => (clone $incomes)->with('bank')->orderByDesc('occurred_on')->orderByDesc('id')->get(),
             'expenses' => (clone $expenses)->with('bank')->orderByDesc('occurred_on')->orderByDesc('id')->get(),
+        ];
+    }
+
+    /**
+     * Lo que quedó al cierre del mes anterior, incluidos los meses previos.
+     *
+     * @return array{usd: float, ves: float}
+     */
+    private function openingBalance(User $user, string $from): array
+    {
+        $incomeUsd = round((float) Income::query()->ownedBy($user)->where('occurred_on', '<', $from)->sum('amount_usd'), 2);
+        $incomeVes = round((float) Income::query()->ownedBy($user)->where('occurred_on', '<', $from)->sum('amount_ves'), 2);
+        $expenseUsd = round((float) Expense::query()->ownedBy($user)->where('occurred_on', '<', $from)->sum('amount_usd'), 2);
+        $expenseVes = round((float) Expense::query()->ownedBy($user)->where('occurred_on', '<', $from)->sum('amount_ves'), 2);
+
+        return [
+            'usd' => round($incomeUsd - $expenseUsd, 2),
+            'ves' => round($incomeVes - $expenseVes, 2),
         ];
     }
 }
