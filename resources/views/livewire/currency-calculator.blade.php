@@ -18,11 +18,11 @@
                     <span class="lt-amount" x-text="heroAmount">{{ $hero }}</span>
                     <span class="lt-unit">bolívares</span>
                 </p>
-                <p class="lt-missing" x-show="!rate" @if($quote['available']) x-cloak @endif>{{ $quote['error'] ?? 'Tasa no disponible actualmente' }}</p>
+                <p class="lt-missing" x-show="!rate" x-text="error || 'Tasa no disponible actualmente'" @if($quote['available']) x-cloak @endif>{{ $quote['error'] }}</p>
             </div>
 
             <div class="lt-tools">
-                <div class="lt-picker">
+                <div class="lt-picker" x-on:click.outside="menuOpen = false">
                     <button type="button" class="lt-pill" x-on:click="menuOpen = !menuOpen" x-bind:aria-expanded="menuOpen" aria-haspopup="listbox">
                         <span class="lt-pill-mark" x-show="!code.startsWith('USDT')">BCV</span>
                         <span class="lt-pill-logo" x-show="code.startsWith('USDT')" x-cloak>
@@ -33,7 +33,7 @@
                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" x-bind:class="menuOpen && 'is-open'"><path d="M6 9l6 6 6-6"/></svg>
                     </button>
 
-                    <div class="lt-menu" x-show="menuOpen" x-cloak x-on:click.outside="menuOpen = false" role="listbox">
+                    <div class="lt-menu" x-show="menuOpen" x-cloak role="listbox">
                         <template x-for="(item, key) in {
                             USD: { short: 'USD', source: 'BCV', flag: 'https://flagcdn.com/w80/us.png', alt: 'Bandera de Estados Unidos' },
                             EUR: { short: 'EUR', source: 'BCV', flag: 'https://flagcdn.com/w80/eu.png', alt: 'Bandera de la Unión Europea' },
