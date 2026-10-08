@@ -144,8 +144,8 @@
                 <div class="lt-gap" x-show="buyGap || sellGap" @unless($gaps['buy'] || $gaps['sell']) x-cloak @endunless>
                     <p>Brecha BCV vs USDT</p>
                     <div>
-                        <span x-show="buyGap">Compra: <strong x-text="buyGap?.text" x-bind:class="buyGap && `is-${buyGap.tone}`" @class(['is-'.$gaps['buy']['tone'] => $gaps['buy']])>{{ $gaps['buy']['text'] ?? '' }}</strong></span>
-                        <span x-show="sellGap">Venta: <strong x-text="sellGap?.text" x-bind:class="sellGap && `is-${sellGap.tone}`" @class(['is-'.$gaps['sell']['tone'] => $gaps['sell']])>{{ $gaps['sell']['text'] ?? '' }}</strong></span>
+                        <span x-show="buyGap">Compra: <strong x-text="buyGap?.text" x-bind:class="buyGap && `is-${buyGap.tone}`" @class(['is-up' => ($gaps['buy']['tone'] ?? null) === 'up', 'is-down' => ($gaps['buy']['tone'] ?? null) === 'down'])>{{ $gaps['buy']['text'] ?? '' }}</strong></span>
+                        <span x-show="sellGap">Venta: <strong x-text="sellGap?.text" x-bind:class="sellGap && `is-${sellGap.tone}`" @class(['is-up' => ($gaps['sell']['tone'] ?? null) === 'up', 'is-down' => ($gaps['sell']['tone'] ?? null) === 'down'])>{{ $gaps['sell']['text'] ?? '' }}</strong></span>
                     </div>
                 </div>
             </div>
