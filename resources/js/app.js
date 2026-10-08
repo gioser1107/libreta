@@ -1,4 +1,7 @@
 import './passkeys';
+import './pwa';
+import './page-loader';
+import './calculator';
 
 document.addEventListener('click', (event) => {
     const link = event.target instanceof Element ? event.target.closest('a[data-keep-period]') : null;

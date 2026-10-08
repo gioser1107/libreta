@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Actions\Logout;
+use App\Livewire\CurrencyCalculator;
 use App\Livewire\ExpenseLedger;
 use App\Livewire\IncomeLedger;
 use App\Livewire\MonthSummary;
@@ -27,8 +28,8 @@ Route::get('/manifest.webmanifest', function () {
         'display' => 'standalone',
         'display_override' => ['standalone', 'minimal-ui'],
         'orientation' => 'any',
-        'background_color' => '#f3f4f6',
-        'theme_color' => '#f3f4f6',
+        'background_color' => '#ffffff',
+        'theme_color' => '#ffffff',
         'categories' => ['finance', 'productivity'],
         'prefer_related_applications' => false,
         'launch_handler' => [
@@ -72,6 +73,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/egresos', ExpenseLedger::class)
         ->middleware('permission:egresos.view')
         ->name('expenses.index');
+
+    Route::get('/calculadora', CurrencyCalculator::class)->name('calculator');
 
     Route::view('profile', 'profile')->name('profile');
 

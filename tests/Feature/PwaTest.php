@@ -33,11 +33,23 @@ class PwaTest extends TestCase
             ->assertSee('apple-mobile-web-app-capable', false)
             ->assertSee('apple-touch-icon', false)
             ->assertSee('id="lb-splash"', false)
+            ->assertSee('id="lb-page-loader"', false)
+            ->assertSee('Cargando', false)
+            ->assertSee('window.__lbSplashShown', false)
             ->assertSee('viewport-fit=cover', false);
 
         $this->assertFileExists(public_path('sw.js'));
         $this->assertFileExists(public_path('offline.html'));
         $this->assertFileExists(public_path('icons/icon-512.png'));
         $this->assertFileExists(public_path('icons/apple-touch-icon.png'));
+    }
+
+    public function test_app_bundle_registers_the_service_worker(): void
+    {
+        $manifest = json_decode((string) file_get_contents(public_path('build/manifest.json')), true, 512, JSON_THROW_ON_ERROR);
+        $script = (string) file_get_contents(public_path('build/'.$manifest['resources/js/app.js']['file']));
+
+        $this->assertStringContainsString('serviceWorker.register', $script);
+        $this->assertStringContainsString('/sw.js', $script);
     }
 }

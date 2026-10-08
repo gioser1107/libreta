@@ -19,8 +19,12 @@ function spanishMessage(error, fallback) {
         return 'Este navegador no puede usar Face ID.';
     }
 
-    if (error instanceof InvalidDomainError) {
-        return 'Abre la libreta en la misma dirección donde activaste Face ID.';
+    if (error instanceof InvalidDomainError || (error instanceof Error && /invalid domain|invalid RP ID/i.test(error.message))) {
+        return 'Face ID no funciona en una dirección IP. Ábrela en localhost, con el mismo puerto.';
+    }
+
+    if (error instanceof Error && error.message === 'Server Error') {
+        return 'El servidor no pudo preparar Face ID. Recarga la página e inténtalo otra vez.';
     }
 
     if (error instanceof Error && error.message.includes('Password confirmation')) {
@@ -96,24 +100,61 @@ async function registerPasskey() {
     }
 }
 
+const desktopPointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+function passkeyLoginIsAvailable() {
+    return Passkeys.isSupported() && !desktopPointer.matches;
+}
+
 function bindPasskeyLogin() {
     const zone = document.querySelector('[data-passkey-login]');
 
-    if (!zone || zone.dataset.bound === '1' || !Passkeys.isSupported()) {
+    if (!zone) {
+        return;
+    }
+
+    const button = zone.querySelector('[data-passkey-login-button]');
+    const available = passkeyLoginIsAvailable();
+
+    if (button) {
+        button.hidden = !available;
+    }
+
+    if (!available || zone.dataset.bound === '1') {
         return;
     }
 
     zone.dataset.bound = '1';
-    zone.hidden = false;
-    zone.querySelector('[data-passkey-login-button]')?.addEventListener('click', () => {
+    button?.addEventListener('click', () => {
         loginWithPasskey(zone);
     });
 }
 
+document.addEventListener('click', (event) => {
+    const button = event.target instanceof Element
+        ? event.target.closest('[data-passkey-register-button]')
+        : null;
+
+    if (!button) {
+        return;
+    }
+
+    const zone = button.closest('[data-passkey-register]');
+
+    if (!zone?.hasAttribute('data-passkey-ready')) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    registerPasskey();
+}, true);
+
 document.addEventListener('DOMContentLoaded', bindPasskeyLogin);
 document.addEventListener('livewire:navigated', bindPasskeyLogin);
+desktopPointer.addEventListener('change', bindPasskeyLogin);
 document.addEventListener('livewire:init', () => {
-    window.Livewire.on('passkey-register', () => {
-        registerPasskey();
+    window.Livewire.hook('commit', ({ succeed }) => {
+        succeed(() => bindPasskeyLogin());
     });
 });

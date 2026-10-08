@@ -190,12 +190,47 @@ class PersonalLedgerTest extends TestCase
         $this->assertEqualsWithDelta(5.0, $summary['balance_usd'], 0.001);
         $this->assertEqualsWithDelta(500.0, $summary['balance_ves'], 0.001);
 
+        $component = Livewire::actingAs($user)
+            ->test(MonthSummary::class)
+            ->set('month', 8)
+            ->set('year', 2026)
+            ->assertSee('Último ingreso')
+            ->assertSee('Último egreso')
+            ->assertSee('Mayor gasto')
+            ->assertSee('Mayor ingreso')
+            ->assertSee('Sueldo')
+            ->assertSee('Luz')
+            ->assertSee('Comida')
+            ->assertSee('Quedó el 50% de lo ingresado')
+            ->assertSee('En qué se fue')
+            ->assertSee('80%')
+            ->assertSee('20%')
+            ->assertSee('Últimos movimientos')
+            ->assertDontSee('Sueldo secreto');
+
+        $html = $component->html();
+        $this->assertMatchesRegularExpression(
+            '/Último egreso<\/span>\s*<span class="lb-highlight-title">Luz<\/span>/',
+            $html,
+        );
+        $this->assertMatchesRegularExpression(
+            '/Mayor gasto<\/span>\s*<span class="lb-highlight-title">Comida<\/span>/',
+            $html,
+        );
+    }
+
+    public function test_month_summary_states_when_the_month_has_no_movements(): void
+    {
+        $user = $this->usuario();
+
         Livewire::actingAs($user)
             ->test(MonthSummary::class)
             ->set('month', 8)
             ->set('year', 2026)
-            ->assertSee('Sueldo')
-            ->assertDontSee('Sueldo secreto');
+            ->assertSee('Sin ingresos')
+            ->assertSee('Sin egresos')
+            ->assertSee('No hay movimientos en agosto 2026.')
+            ->assertDontSee('En qué se fue');
     }
 
     public function test_quote_refuses_a_movement_when_the_rate_is_missing(): void

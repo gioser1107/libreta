@@ -16,10 +16,11 @@
     <body class="lb-app antialiased">
         @include('layouts.partials.pwa-body')
         <div class="lb-guest">
-            <div class="lb-guest-card">
-                <a href="/" wire:navigate class="lb-brand">
-                    <x-application-logo />
-                </a>
+            <div class="lb-auth">
+                <div class="lb-auth-mark">
+                    <img src="{{ asset('icons/apple-touch-icon.png') }}" alt="" class="lb-app-icon" width="96" height="96">
+                    <p class="lb-auth-name">{{ config('libreta.company') }}</p>
+                </div>
 
                 {{ $slot }}
             </div>

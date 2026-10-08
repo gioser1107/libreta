@@ -2,7 +2,7 @@
     type="button"
     x-data="{ dark: document.documentElement.classList.contains('dark') }"
     @lb-theme.window="dark = !!$event.detail"
-    @click="window.lbSetTheme(!dark)"
+    @click="window.lbSetTheme(!dark, $event)"
     class="lb-menu-item"
 >
     <svg x-show="!dark" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

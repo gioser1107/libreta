@@ -2,6 +2,8 @@
     <img src="{{ asset('icons/apple-touch-icon.png') }}" alt="">
 </div>
 
+<x-page-loader />
+
 <div id="lb-offline" class="lb-offline" hidden>Sin conexión</div>
 
 <div id="lb-install" class="lb-install" hidden>
@@ -22,10 +24,22 @@
 </div>
 
 <script>
-    window.setTimeout(function () {
+    (function () {
         var splash = document.getElementById('lb-splash');
         if (!splash) return;
-        splash.classList.add('is-done');
-        window.setTimeout(function () { splash.remove(); }, 380);
-    }, 1500);
+
+        if (window.__lbSplashShown || document.documentElement.classList.contains('lb-booted')) {
+            window.__lbSplashShown = true;
+            document.documentElement.classList.add('lb-booted');
+            splash.remove();
+            return;
+        }
+
+        window.__lbSplashShown = true;
+
+        window.setTimeout(function () {
+            splash.classList.add('is-done');
+            window.setTimeout(function () { splash.remove(); }, 380);
+        }, 1500);
+    })();
 </script>

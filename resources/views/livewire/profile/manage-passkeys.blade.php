@@ -60,7 +60,7 @@ new class extends Component
 
         if ($this->pendingAction === 'register') {
             $this->pendingAction = null;
-            $this->dispatch('passkey-register');
+            $this->confirming = false;
 
             return;
         }
@@ -82,7 +82,7 @@ new class extends Component
         unset($this->passkeys);
     }
 
-    protected function passwordIsConfirmed(): bool
+    public function passwordIsConfirmed(): bool
     {
         $confirmedAt = (int) session('auth.password_confirmed_at', 0);
 
@@ -90,13 +90,25 @@ new class extends Component
     }
 }; ?>
 
-<section>
-    <header>
-        <h2 class="lb-section-title">Face ID</h2>
-        <p class="lb-help">
-            Actívalo en este teléfono. En el acceso, el botón Face ID abre la cara o la huella.
-        </p>
-    </header>
+<section data-passkey-register @if ($this->passwordIsConfirmed()) data-passkey-ready @endif>
+    <p data-passkey-error class="lb-error" hidden></p>
+
+    @if ($confirming)
+        <form wire:submit="confirmPassword" class="lb-row-body">
+            <label class="lb-field" for="passkey_password">
+                <span class="lb-label">Clave</span>
+                <x-password-input wire:model="password" id="passkey_password" autocomplete="current-password" />
+                <x-input-error :messages="$errors->get('password')" />
+            </label>
+            <p class="lb-help">Una vez. Luego pulsa Activar Face ID.</p>
+            <x-primary-button>Continuar</x-primary-button>
+        </form>
+    @else
+        <button type="button" wire:click="startRegistration" data-passkey-register-button class="lb-row">
+            <span>Face ID</span>
+            <span class="lb-row-value" data-passkey-label>Activar Face ID</span>
+        </button>
+    @endif
 
     @if ($this->passkeys->isNotEmpty())
         <ul class="lb-passkey-list">
@@ -104,10 +116,7 @@ new class extends Component
                 <li class="lb-passkey-row" wire:key="passkey-{{ $passkey->id }}">
                     <div>
                         <p>{{ $passkey->name }}</p>
-                        <p class="lb-help">
-                            {{ $passkey->authenticator ?: 'Este dispositivo' }}
-                            · {{ $passkey->created_at?->translatedFormat('d M Y') }}
-                        </p>
+                        <p class="lb-help">{{ $passkey->created_at?->translatedFormat('d M Y') }}</p>
                     </div>
                     <button
                         type="button"
@@ -121,24 +130,4 @@ new class extends Component
             @endforeach
         </ul>
     @endif
-
-    <div class="lb-stack" data-passkey-register>
-        <p data-passkey-error class="lb-error" hidden></p>
-
-        @if ($confirming)
-            <form wire:submit="confirmPassword" class="lb-stack">
-                <div>
-                    <x-input-label for="passkey_password" value="Clave" />
-                    <x-password-input wire:model="password" id="passkey_password" class="mt-1" autocomplete="current-password" />
-                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                    <p class="lb-help">Hace falta tu clave una vez. Después el teléfono pide la cara o la huella.</p>
-                </div>
-                <x-primary-button>Confirmar y continuar</x-primary-button>
-            </form>
-        @else
-            <button type="button" wire:click="startRegistration" data-passkey-register-button class="lb-btn lb-btn-primary">
-                <span data-passkey-label>Activar Face ID</span>
-            </button>
-        @endif
-    </div>
 </section>

@@ -71,6 +71,7 @@ class PasskeyAuthenticationTest extends TestCase
             ->withSession(['auth.password_confirmed_at' => time()])
             ->getJson(route('passkey.registration-options'))
             ->assertOk()
+            ->assertJsonPath('options.rp.id', 'localhost')
             ->assertJsonPath('options.authenticatorSelection.authenticatorAttachment', 'platform')
             ->assertJsonPath('options.authenticatorSelection.userVerification', 'required')
             ->assertJsonPath('options.authenticatorSelection.residentKey', 'required');
@@ -123,7 +124,7 @@ class PasskeyAuthenticationTest extends TestCase
             ->call('startRegistration')
             ->set('password', 'incorrecta')
             ->call('confirmPassword')
-            ->assertHasErrors(['password' => 'La contraseña no coincide.'])
+            ->assertHasErrors(['password' => 'La clave no coincide.'])
             ->assertNotDispatched('passkey-register');
     }
 
@@ -140,7 +141,8 @@ class PasskeyAuthenticationTest extends TestCase
             ->call('confirmPassword')
             ->assertHasNoErrors()
             ->assertSet('confirming', false)
-            ->assertDispatched('passkey-register');
+            ->assertSee('Activar Face ID')
+            ->assertSee('data-passkey-ready', false);
     }
 
     public function test_confirmed_password_starts_face_id_without_asking_again(): void
@@ -156,7 +158,26 @@ class PasskeyAuthenticationTest extends TestCase
 
         $component->call('startRegistration')
             ->assertSet('confirming', false)
-            ->assertDispatched('passkey-register');
+            ->assertSee('data-passkey-ready', false);
+    }
+
+    public function test_face_id_uses_the_open_site_even_when_the_app_url_has_no_scheme(): void
+    {
+        config([
+            'app.url' => 'control.kontrolaonline.com',
+            'passkeys.relying_party_id' => null,
+            'passkeys.allowed_origins' => ['control.kontrolaonline.com'],
+        ]);
+
+        $this->get('https://control.kontrolaonline.com/passkeys/login/options')
+            ->assertOk()
+            ->assertJsonPath('options.rpId', 'control.kontrolaonline.com');
+    }
+
+    public function test_ip_address_opens_on_localhost_so_face_id_can_start(): void
+    {
+        $this->get('http://127.0.0.1:8000/login')
+            ->assertRedirect('http://localhost:8000/login');
     }
 
     public function test_user_can_remove_their_face_id(): void

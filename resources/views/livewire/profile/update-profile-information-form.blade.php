@@ -9,7 +9,10 @@ use Livewire\Volt\Component;
 new class extends Component
 {
     public string $name = '';
+
     public string $email = '';
+
+    public bool $editing = false;
 
     /**
      * Mount the component.
@@ -40,7 +43,17 @@ new class extends Component
 
         $user->save();
 
+        $this->editing = false;
+
         $this->dispatch('profile-updated', name: $user->name);
+    }
+
+    public function cancelEditing(): void
+    {
+        $this->name = Auth::user()->name;
+        $this->email = Auth::user()->email;
+        $this->editing = false;
+        $this->resetValidation();
     }
 
     /**
@@ -63,53 +76,49 @@ new class extends Component
 }; ?>
 
 <section>
-    <header>
-        <h2 class="lb-section-title">
-            {{ __('Profile Information') }}
-        </h2>
-
-        <p class="lb-help">
-            {{ __("Update your account's profile information and email address.") }}
-        </p>
-    </header>
-
-    <form wire:submit="updateProfileInformation" class="lb-stack">
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full" required autofocus autocomplete="name" />
-            <x-input-error class="mt-2" :messages="$errors->get('name')" />
+    <div class="lb-who">
+        <span class="lb-avatar is-lg" aria-hidden="true">{{ mb_substr(Auth::user()->name, 0, 1) }}</span>
+        <div class="lb-who-text">
+            <strong>{{ Auth::user()->name }}</strong>
+            <span>{{ Auth::user()->email }}</span>
         </div>
+        @unless ($editing)
+            <button type="button" wire:click="$set('editing', true)" class="lb-chip">Editar</button>
+        @endunless
+    </div>
 
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" name="email" type="email" class="mt-1 block w-full" required autocomplete="username" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+    @if ($editing)
+        <form wire:submit="updateProfileInformation" class="lb-who-edit">
+            <label class="lb-field" for="name">
+                <span class="lb-label">Nombre</span>
+                <x-text-input wire:model="name" id="name" name="name" type="text" required autofocus autocomplete="name" />
+                <x-input-error :messages="$errors->get('name')" />
+            </label>
 
-            @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
-                <div>
+            <label class="lb-field" for="email">
+                <span class="lb-label">Correo</span>
+                <x-text-input wire:model="email" id="email" name="email" type="email" required autocomplete="username" />
+                <x-input-error :messages="$errors->get('email')" />
+
+                @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
                     <p class="lb-help">
-                        {{ __('Your email address is unverified.') }}
+                        Este correo no está verificado.
 
                         <button wire:click.prevent="sendVerification" class="lb-link">
-                            {{ __('Click here to re-send the verification email.') }}
+                            Enviar de nuevo
                         </button>
                     </p>
 
                     @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-green-600">
-                            {{ __('A new verification link has been sent to your email address.') }}
-                        </p>
+                        <p class="lb-help">Te enviamos un enlace nuevo.</p>
                     @endif
-                </div>
-            @endif
-        </div>
+                @endif
+            </label>
 
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
-
-            <x-action-message class="me-3" on="profile-updated">
-                {{ __('Saved.') }}
-            </x-action-message>
-        </div>
-    </form>
+            <div class="flex items-center justify-end gap-2">
+                <button type="button" wire:click="cancelEditing" class="lb-btn lb-btn-ghost">Cancelar</button>
+                <x-primary-button>Guardar</x-primary-button>
+            </div>
+        </form>
+    @endif
 </section>

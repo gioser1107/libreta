@@ -1,5 +1,7 @@
 <?php
 
+use App\Passkeys\RelyingParty;
+
 return [
 
     /*
@@ -13,7 +15,7 @@ return [
     |
     */
 
-    'relying_party_id' => parse_url(config('app.url'), PHP_URL_HOST),
+    'relying_party_id' => RelyingParty::idFromAppUrl((string) config('app.url')),
 
     /*
     |--------------------------------------------------------------------------
@@ -26,10 +28,10 @@ return [
     |
     */
 
-    'allowed_origins' => array_values(array_unique(array_filter(array_map(
+    'allowed_origins' => RelyingParty::origins(array_values(array_unique(array_filter(array_map(
         static fn (string $origin): string => rtrim(trim($origin), '/'),
         explode(',', (string) env('PASSKEYS_ALLOWED_ORIGINS', (string) config('app.url'))),
-    )))),
+    ))))),
 
     /*
     |--------------------------------------------------------------------------

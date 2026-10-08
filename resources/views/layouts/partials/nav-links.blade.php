@@ -26,6 +26,13 @@
             'can' => auth()->user()->can('egresos.view'),
             'icon' => 'M12 5v14m0 0l-5-5m5 5l5-5',
         ],
+        [
+            'route' => 'calculator',
+            'label' => 'Calculadora',
+            'active' => request()->routeIs('calculator'),
+            'can' => true,
+            'icon' => 'M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2zm0 4h12M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01',
+        ],
     ];
 @endphp
 
