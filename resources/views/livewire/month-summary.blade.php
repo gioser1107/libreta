@@ -72,28 +72,38 @@
     </section>
     </div>
 
-    @if($accounts->isNotEmpty())
-        <section class="lb-block" aria-label="Saldos por banco">
-            <div class="lb-block-head">
-                <h2 class="lb-section-title">En tus bancos</h2>
-                @if($accountTotals['label'] !== 'Sin saldo')
-                    <span class="lb-help">{{ $accountTotals['label'] }}</span>
-                @endif
-            </div>
-            <div class="lb-panel">
+    <section class="lb-block" aria-label="Bancos">
+        <div class="lb-block-head">
+            <h2 class="lb-section-title">Bancos</h2>
+            <a href="{{ route('banks') }}" wire:navigate class="lb-textbtn">Gestionar</a>
+        </div>
+        <div class="lb-panel">
+            @if($accounts->isEmpty())
+                <a href="{{ route('banks') }}" wire:navigate class="lb-entry">
+                    <span class="lb-entry-main">
+                        <span class="lb-entry-title">Agrega un banco</span>
+                    </span>
+                </a>
+            @else
                 <div class="lb-list">
                     @foreach($accounts as $account)
-                        <div wire:key="account-{{ $account['bank']->id }}" class="lb-entry">
+                        <a href="{{ route('banks') }}" wire:navigate wire:key="account-{{ $account['bank']->id }}" class="lb-entry">
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $account['bank']->name }}</span>
-                                <span class="lb-entry-meta">{{ $account['label'] }}</span>
                             </span>
-                        </div>
+                            <span class="lb-entry-amt">
+                                @if($account['label'] === 'Sin saldo')
+                                    <small>Sin saldo</small>
+                                @else
+                                    {{ $account['label'] }}
+                                @endif
+                            </span>
+                        </a>
                     @endforeach
                 </div>
-            </div>
-        </section>
-    @endif
+            @endif
+        </div>
+    </section>
 
     <section class="lb-highlights" aria-label="Destacados del mes">
         @foreach($cards as $card)

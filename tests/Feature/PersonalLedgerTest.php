@@ -66,7 +66,10 @@ class PersonalLedgerTest extends TestCase
             ->set('amount', '100')
             ->call('save')
             ->assertHasNoErrors()
-            ->assertSet('currency', 'VES');
+            ->assertSet('currency', 'VES')
+            ->assertSee('Total en dólares')
+            ->assertSee('Total en bolívares')
+            ->assertSee('Movimientos');
 
         $income = Income::query()->first();
         $this->assertNotNull($income);
@@ -84,7 +87,10 @@ class PersonalLedgerTest extends TestCase
             ->set('status', 'paid')
             ->call('save')
             ->assertHasNoErrors()
-            ->assertSet('currency', 'VES');
+            ->assertSet('currency', 'VES')
+            ->assertSee('Total en dólares')
+            ->assertSee('Por pagar')
+            ->assertSee('Todos los estados');
 
         $expense = Expense::query()->first();
         $this->assertNotNull($expense);

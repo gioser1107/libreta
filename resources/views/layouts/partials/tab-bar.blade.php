@@ -29,6 +29,13 @@
             'tone' => 'out',
         ],
         [
+            'route' => 'banks',
+            'label' => 'Bancos',
+            'active' => request()->routeIs('banks'),
+            'can' => true,
+            'icon' => 'M4 10l8-6 8 6M6 10v8h12v-8M10 18v-4h4v4',
+        ],
+        [
             'route' => 'calculator',
             'label' => 'Calculadora',
             'active' => request()->routeIs('calculator'),

@@ -9,10 +9,20 @@
         @include('livewire.partials.month-switcher')
     </header>
 
-    <p class="lb-total-line">
-        <strong>{{ \App\Support\Money::format($monthUsd, 'USD') }}</strong>
-        <span>{{ \App\Support\Money::format($monthVes, 'VES') }}</span>
-    </p>
+    <section class="lb-stats is-3" aria-label="Total de ingresos">
+        <div class="lb-stat">
+            <span>Total en dólares</span>
+            <strong>{{ \App\Support\Money::format($monthUsd, 'USD') }}</strong>
+        </div>
+        <div class="lb-stat">
+            <span>Total en bolívares</span>
+            <strong>{{ \App\Support\Money::format($monthVes, 'VES') }}</strong>
+        </div>
+        <div class="lb-stat">
+            <span>Movimientos</span>
+            <strong>{{ $rows->count() }}</strong>
+        </div>
+    </section>
 
     <div class="lb-filters">
         <input wire:model.live.debounce.300ms="search" type="search" placeholder="Buscar en todos los meses" class="lb-control grow" aria-label="Buscar en todos los meses">

@@ -19,14 +19,19 @@ class TransfersTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_profile_offers_transfers_between_banks(): void
+    public function test_banks_page_offers_transfers_between_banks(): void
     {
         $user = $this->usuario();
 
         $this->actingAs($user)
-            ->get(route('profile', ['seccion' => 'traspasos']))
+            ->get(route('banks'))
+            ->assertOk()
             ->assertSee('Pasar entre bancos')
             ->assertSeeLivewire(Transfers::class);
+
+        $this->actingAs($user)
+            ->get(route('profile', ['seccion' => 'traspasos']))
+            ->assertRedirect(route('banks'));
     }
 
     public function test_guest_cannot_open_transfers(): void

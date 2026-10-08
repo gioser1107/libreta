@@ -54,26 +54,6 @@ class BankBalanceService
     }
 
     /**
-     * @param  Collection<int, array{balances: array{VES: float, USD: float, EUR: float}}>  $accounts
-     * @return array{VES: float, USD: float, EUR: float, label: string}
-     */
-    public function totals(Collection $accounts): array
-    {
-        $totals = ['VES' => 0.0, 'USD' => 0.0, 'EUR' => 0.0];
-
-        foreach ($accounts as $account) {
-            foreach ($totals as $currency => $amount) {
-                $totals[$currency] = round($amount + $account['balances'][$currency], 2);
-            }
-        }
-
-        return [
-            ...$totals,
-            'label' => $this->label($totals),
-        ];
-    }
-
-    /**
      * @param  array{VES: float, USD: float, EUR: float}  $balances
      */
     public function label(array $balances): string

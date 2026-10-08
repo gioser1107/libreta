@@ -75,7 +75,6 @@ class MonthSummary extends Component
             ),
             'pace' => $this->monthPace($summary),
             'accounts' => $accounts,
-            'accountTotals' => $banks->totals($accounts),
             'budgetCategories' => Expense::CATEGORIES,
         ])->layout('layouts.app');
     }
@@ -330,7 +329,7 @@ class MonthSummary extends Component
                 (float) $transfer->amount_usd,
                 $transfer->currency,
                 Money::format($transfer->amount, $transfer->currency),
-                route('profile', ['seccion' => 'traspasos']),
+                route('banks'),
             ));
     }
 

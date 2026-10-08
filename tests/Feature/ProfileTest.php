@@ -19,11 +19,10 @@ class ProfileTest extends TestCase
             ->get('/profile')
             ->assertOk()
             ->assertSee('Perfil')
-            ->assertSee('Bancos')
-            ->assertSee('Traspasos')
             ->assertSee('Cada mes')
             ->assertSee('Ajustes')
-            ->assertDontSee('Mis bancos');
+            ->assertDontSee('Mis bancos')
+            ->assertDontSee('Pasar entre bancos');
 
         $this->actingAs($user)
             ->get(route('profile', ['seccion' => 'perfil']))

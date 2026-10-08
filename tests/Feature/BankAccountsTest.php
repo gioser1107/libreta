@@ -27,14 +27,20 @@ class BankAccountsTest extends TestCase
 
     private const DANGEROUS_NAME = "<script>alert('xss')</script>";
 
-    public function test_account_page_offers_bank_management(): void
+    public function test_banks_page_offers_bank_management(): void
     {
         $user = $this->usuario();
 
         $this->actingAs($user)
-            ->get(route('profile', ['seccion' => 'bancos']))
+            ->get(route('banks'))
+            ->assertOk()
             ->assertSee('Mis bancos')
+            ->assertSee('Pasar entre bancos')
             ->assertSeeLivewire(BankManager::class);
+
+        $this->actingAs($user)
+            ->get(route('profile', ['seccion' => 'bancos']))
+            ->assertRedirect(route('banks'));
     }
 
     public function test_guest_cannot_open_the_bank_manager(): void

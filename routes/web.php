@@ -77,6 +77,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/calculadora', CurrencyCalculator::class)->name('calculator');
 
+    Route::view('/bancos', 'banks')->name('banks');
+
     Route::get('/exportar', ExportLedgerController::class)
         ->middleware(['permission:ingresos.view', 'permission:egresos.view'])
         ->name('ledger.export');
@@ -90,6 +92,10 @@ Route::middleware('auth')->group(function () {
             'ajustes' => 'Ajustes',
         ];
         $section = request()->string('seccion')->toString();
+
+        if (in_array($section, ['bancos', 'traspasos'], true)) {
+            return redirect()->route('banks');
+        }
 
         return view('profile', [
             'section' => array_key_exists($section, $sections) ? $section : null,

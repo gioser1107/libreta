@@ -15,14 +15,6 @@
                     <span>Perfil</span>
                     <span class="lb-row-value">Nombre y correo</span>
                 </a>
-                <a href="{{ route('profile', ['seccion' => 'bancos']) }}" wire:navigate class="lb-row">
-                    <span>Bancos</span>
-                    <span class="lb-row-value">Saldos</span>
-                </a>
-                <a href="{{ route('profile', ['seccion' => 'traspasos']) }}" wire:navigate class="lb-row">
-                    <span>Traspasos</span>
-                    <span class="lb-row-value">Entre tus bancos</span>
-                </a>
                 <a href="{{ route('profile', ['seccion' => 'fijos']) }}" wire:navigate class="lb-row">
                     <span>Cada mes</span>
                     <span class="lb-row-value">Sueldo, alquiler</span>
@@ -36,10 +28,6 @@
             <section class="lb-panel">
                 <livewire:profile.update-profile-information-form />
             </section>
-        @elseif($section === 'bancos')
-            <livewire:bank-manager />
-        @elseif($section === 'traspasos')
-            <livewire:transfers />
         @elseif($section === 'fijos')
             <livewire:recurring-entries />
         @else
