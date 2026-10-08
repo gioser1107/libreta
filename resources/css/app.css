@@ -84,13 +84,11 @@ html,
 body {
     height: 100%;
     overscroll-behavior: none;
+    touch-action: pan-x pan-y;
     -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-}
-
-html {
-    touch-action: manipulation;
 }
 
 body {
@@ -217,6 +215,26 @@ html.dark .lb-logo {
 .lb-nav a.is-active {
     background: var(--nav);
     color: var(--ink);
+}
+
+.lb-nav a svg.is-in,
+.lb-tabs a svg.is-in {
+    color: #15803d;
+}
+
+.lb-nav a svg.is-out,
+.lb-tabs a svg.is-out {
+    color: #dc2626;
+}
+
+html.dark .lb-nav a svg.is-in,
+html.dark .lb-tabs a svg.is-in {
+    color: #4ade80;
+}
+
+html.dark .lb-nav a svg.is-out,
+html.dark .lb-tabs a svg.is-out {
+    color: #f87171;
 }
 
 .lb-side.is-narrow .lb-nav a,
@@ -641,6 +659,31 @@ a.lb-stat:hover strong {
 
 .lb-banks .lb-entry {
     cursor: default;
+}
+
+.lb-note {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.75rem;
+}
+
+.lb-budget {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.95rem;
+    border-top: 1px solid var(--line);
+}
+
+.lb-budget .lb-control {
+    flex: 1 1 8rem;
+    min-width: 0;
+}
+
+.lb-cat-top span.is-over {
+    color: var(--ink);
+    font-weight: 600;
 }
 
 .lb-banks .lb-row-body {
@@ -1422,20 +1465,15 @@ html.dark .lb-app-icon {
     }
 }
 
-html.lb-standalone,
-html.lb-standalone body {
-    -webkit-touch-callout: none;
-}
-
-html.lb-standalone button,
-html.lb-standalone a {
+button,
+a {
     -webkit-user-select: none;
     user-select: none;
 }
 
-html.lb-standalone input,
-html.lb-standalone textarea,
-html.lb-standalone .lb-main {
+input,
+textarea,
+.lb-main {
     -webkit-user-select: text;
     user-select: text;
 }
@@ -1997,13 +2035,30 @@ a.lb-highlight:hover {
     justify-content: center;
     border-radius: 0.65rem;
     background: var(--surface-muted);
+    color: var(--ink);
     font-size: 1rem;
     font-weight: 600;
     line-height: 1;
 }
 
+.lb-mark.is-in {
+    background: #dcfce7;
+    color: #15803d;
+}
+
 .lb-mark.is-out {
-    color: var(--muted);
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+html.dark .lb-mark.is-in {
+    background: #052e16;
+    color: #4ade80;
+}
+
+html.dark .lb-mark.is-out {
+    background: #450a0a;
+    color: #f87171;
 }
 
 @media (prefers-reduced-motion: reduce) {

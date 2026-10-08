@@ -15,7 +15,7 @@
     </p>
 
     <div class="lb-filters">
-        <input wire:model.live.debounce.300ms="search" type="search" placeholder="Buscar por concepto" class="lb-control grow" aria-label="Buscar por concepto">
+        <input wire:model.live.debounce.300ms="search" type="search" placeholder="Buscar en todos los meses" class="lb-control grow" aria-label="Buscar en todos los meses">
         <select wire:model.live="filterCategory" class="lb-control" aria-label="Categoría">
             <option value="all">Todas las categorías</option>
             @foreach($categories as $key => $label)
@@ -45,6 +45,7 @@
                 @foreach($rows as $row)
                     @can('ingresos.edit')
                         <button type="button" wire:click="edit({{ $row->id }})" wire:key="income-{{ $row->id }}" class="lb-entry">
+                            <x-move-mark kind="in" />
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $row->concept }}</span>
                                 <span class="lb-entry-meta">{{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}@if($row->bank) · {{ $row->bank->name }}@endif</span>
@@ -56,6 +57,7 @@
                         </button>
                     @else
                         <div class="lb-entry" wire:key="income-{{ $row->id }}">
+                            <x-move-mark kind="in" />
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $row->concept }}</span>
                                 <span class="lb-entry-meta">{{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}@if($row->bank) · {{ $row->bank->name }}@endif</span>

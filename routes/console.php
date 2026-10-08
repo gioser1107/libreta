@@ -15,3 +15,8 @@ Schedule::call(function (): void {
         throw new RuntimeException('bcv:sync-official no guardó EUR y USD para '.$effectiveDate);
     }
 })->dailyAt('20:15')->timezone('America/Caracas');
+
+Schedule::command('ledger:post-recurring')
+    ->dailyAt('00:20')
+    ->timezone('America/Caracas')
+    ->withoutOverlapping();

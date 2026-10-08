@@ -5,12 +5,20 @@ namespace App\Livewire;
 use App\Actions\Banks\CreateBankAction;
 use App\Actions\Banks\DeleteBankAction;
 use App\Actions\Banks\RenameBankAction;
+use App\Actions\Banks\SetBankOpeningAction;
 use App\Models\Bank;
+use App\Services\Ledger\BankBalanceService;
 use Livewire\Component;
 
 class BankManager extends Component
 {
     public string $name = '';
+
+    public string $openingVes = '';
+
+    public string $openingUsd = '';
+
+    public string $openingEur = '';
 
     public ?int $editingId = null;
 
@@ -21,14 +29,18 @@ class BankManager extends Component
         abort_unless(auth()->check(), 403);
     }
 
-    public function save(CreateBankAction $create, RenameBankAction $rename): void
+    public function save(CreateBankAction $create, RenameBankAction $rename, SetBankOpeningAction $openings): void
     {
         $user = auth()->user();
+        $amounts = $this->openings();
+        $openings->validated($amounts);
 
         if ($this->editingId) {
             $rename->execute($user, $this->editingId, $this->name);
+            $openings->execute($user, $this->editingId, $amounts);
         } else {
-            $create->execute($user, $this->name);
+            $bank = $create->execute($user, $this->name);
+            $openings->execute($user, $bank->id, $amounts);
         }
 
         $this->resetForm();
@@ -39,6 +51,9 @@ class BankManager extends Component
         $bank = Bank::query()->ownedBy(auth()->user())->findOrFail($bankId);
         $this->editingId = $bank->id;
         $this->name = $bank->name;
+        $this->openingVes = $this->amountInput($bank->opening_ves);
+        $this->openingUsd = $this->amountInput($bank->opening_usd);
+        $this->openingEur = $this->amountInput($bank->opening_eur);
         $this->confirmingRemovalId = null;
         $this->resetErrorBag();
     }
@@ -73,15 +88,41 @@ class BankManager extends Component
         $this->confirmingRemovalId = null;
     }
 
-    public function render()
+    public function render(BankBalanceService $balances)
     {
+        $user = auth()->user();
+
         return view('livewire.bank-manager', [
             'banks' => Bank::query()
-                ->ownedBy(auth()->user())
+                ->ownedBy($user)
                 ->orderBy('name')
                 ->orderBy('id')
                 ->get(),
+            'balances' => $balances->forUser($user)->keyBy(fn (array $account): int => $account['bank']->id),
         ]);
+    }
+
+    /**
+     * @return array{opening_ves: string, opening_usd: string, opening_eur: string}
+     */
+    private function openings(): array
+    {
+        return [
+            'opening_ves' => $this->openingVes,
+            'opening_usd' => $this->openingUsd,
+            'opening_eur' => $this->openingEur,
+        ];
+    }
+
+    private function amountInput(mixed $amount): string
+    {
+        if ((float) $amount == 0.0) {
+            return '';
+        }
+
+        $formatted = number_format((float) $amount, 2, '.', '');
+
+        return rtrim(rtrim($formatted, '0'), '.');
     }
 
     private function resetForm(): void
@@ -89,6 +130,9 @@ class BankManager extends Component
         $this->editingId = null;
         $this->confirmingRemovalId = null;
         $this->name = '';
+        $this->openingVes = '';
+        $this->openingUsd = '';
+        $this->openingEur = '';
         $this->resetErrorBag();
     }
 }

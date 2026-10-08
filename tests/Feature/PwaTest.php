@@ -38,10 +38,16 @@ class PwaTest extends TestCase
             ->assertSee('id="lb-page-loader"', false)
             ->assertSee('Cargando', false)
             ->assertSee('window.__lbSplashShown', false)
-            ->assertSee('viewport-fit=cover', false);
+            ->assertSee('viewport-fit=cover', false)
+            ->assertSee('user-scalable=no', false)
+            ->assertSee('maximum-scale=1', false);
 
         $this->assertFileExists(public_path('sw.js'));
         $this->assertFileExists(public_path('offline.html'));
+        $this->assertStringContainsString(
+            'user-scalable=no',
+            (string) file_get_contents(public_path('offline.html'))
+        );
         $this->assertFileExists(public_path('icons/icon-512.png'));
         $this->assertFileExists(public_path('icons/apple-touch-icon.png'));
     }

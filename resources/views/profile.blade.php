@@ -11,6 +11,10 @@
 
             <livewire:bank-manager />
 
+            <livewire:transfers />
+
+            <livewire:recurring-entries />
+
             <section class="lb-panel lb-settings">
                 @include('layouts.partials.theme-toggle', ['variant' => 'row'])
 

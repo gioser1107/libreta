@@ -3,6 +3,43 @@ import './pwa';
 import './page-loader';
 import './calculator';
 
+function preventPageZoom() {
+    const blockGesture = (event) => {
+        event.preventDefault();
+    };
+
+    for (const type of ['gesturestart', 'gesturechange', 'gestureend']) {
+        document.addEventListener(type, blockGesture, { passive: false });
+    }
+
+    const blockPinch = (event) => {
+        if (event.touches.length > 1) {
+            event.preventDefault();
+        }
+    };
+
+    document.addEventListener('touchstart', blockPinch, { passive: false });
+    document.addEventListener('touchmove', blockPinch, { passive: false });
+
+    document.addEventListener('wheel', (event) => {
+        if (event.ctrlKey) {
+            event.preventDefault();
+        }
+    }, { passive: false, capture: true });
+
+    document.addEventListener('keydown', (event) => {
+        if (! (event.ctrlKey || event.metaKey) || event.altKey) {
+            return;
+        }
+
+        if (event.key === '+' || event.key === '-' || event.key === '=' || event.key === '_' || event.key === '0') {
+            event.preventDefault();
+        }
+    });
+}
+
+preventPageZoom();
+
 function syncKeyboardInset() {
     const viewport = window.visualViewport;
 

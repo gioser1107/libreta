@@ -17,14 +17,16 @@
             'label' => 'Ingresos',
             'active' => request()->routeIs('incomes.index'),
             'can' => auth()->user()->can('ingresos.view'),
-            'icon' => 'M12 19V5m0 0l-5 5m5-5l5 5',
+            'icon' => 'M12 19V5m0 0l-6 6m6-6l6 6',
+            'tone' => 'in',
         ],
         [
             'route' => 'expenses.index',
             'label' => 'Egresos',
             'active' => request()->routeIs('expenses.index'),
             'can' => auth()->user()->can('egresos.view'),
-            'icon' => 'M12 5v14m0 0l-5-5m5 5l5-5',
+            'icon' => 'M12 5v14m0 0l-6-6m6 6l6-6',
+            'tone' => 'out',
         ],
         [
             'route' => 'calculator',
@@ -53,7 +55,7 @@
                 @class(['is-active' => $tab['active']])
                 @if($tab['active']) aria-current="page" @endif
             >
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true" @class(['is-in' => ($tab['tone'] ?? null) === 'in', 'is-out' => ($tab['tone'] ?? null) === 'out'])>
                     <path stroke-linecap="round" stroke-linejoin="round" d="{{ $tab['icon'] }}"/>
                 </svg>
                 {{ $tab['label'] }}

@@ -10,6 +10,7 @@ use App\Livewire\Concerns\FiltersByMonth;
 use App\Models\Bank;
 use App\Models\Income;
 use App\Services\Ledger\MoneyQuoteService;
+use App\Services\Ledger\PostRecurringEntries;
 use App\Support\Calendar;
 use App\Support\Permissions;
 use Illuminate\Validation\ValidationException;
@@ -50,11 +51,12 @@ class IncomeLedger extends Component
 
     public string $notes = '';
 
-    public function mount(): void
+    public function mount(PostRecurringEntries $poster): void
     {
         Permissions::authorize('ingresos', 'view');
         $this->mountMonth();
         $this->occurred_on = $this->dateInViewedMonth();
+        $poster->postFor(auth()->user());
         $this->openFromUrl();
     }
 
@@ -135,10 +137,10 @@ class IncomeLedger extends Component
     {
         $user = auth()->user();
         $start = now()->setDate($this->year, $this->month, 1);
-        $term = str_replace(['%', '_'], '', $this->search);
+        $term = trim(str_replace(['%', '_'], '', $this->search));
         $base = Income::query()
             ->ownedBy($user)
-            ->whereBetween('occurred_on', [$start->copy()->startOfMonth()->toDateString(), $start->copy()->endOfMonth()->toDateString()])
+            ->when($term === '', fn ($query) => $query->whereBetween('occurred_on', [$start->copy()->startOfMonth()->toDateString(), $start->copy()->endOfMonth()->toDateString()]))
             ->when($term !== '', fn ($query) => $query->where('concept', 'like', '%'.$term.'%'))
             ->when($this->filterCategory !== 'all', fn ($query) => $query->where('category', $this->filterCategory));
 

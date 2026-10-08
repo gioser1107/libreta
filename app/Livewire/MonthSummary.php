@@ -2,10 +2,17 @@
 
 namespace App\Livewire;
 
+use App\Actions\Ledger\DeleteExpenseBudgetAction;
+use App\Actions\Ledger\SaveExpenseBudgetAction;
 use App\Livewire\Concerns\FiltersByMonth;
 use App\Models\Expense;
+use App\Models\ExpenseBudget;
 use App\Models\Income;
+use App\Models\Transfer;
+use App\Models\User;
+use App\Services\Ledger\BankBalanceService;
 use App\Services\Ledger\MonthBalanceService;
+use App\Services\Ledger\PostRecurringEntries;
 use App\Support\Calendar;
 use App\Support\Money;
 use App\Support\Permissions;
@@ -18,17 +25,39 @@ class MonthSummary extends Component
 {
     use FiltersByMonth;
 
-    public function mount(): void
+    public string $budgetCategory = 'comida';
+
+    public string $budgetAmount = '';
+
+    public function mount(PostRecurringEntries $poster): void
     {
         Permissions::authorize('ingresos', 'view');
         Permissions::authorize('egresos', 'view');
         $this->mountMonth();
+        $poster->postFor(auth()->user());
     }
 
-    public function render(MonthBalanceService $balance)
+    public function saveBudget(SaveExpenseBudgetAction $save): void
     {
-        $summary = $balance->summarize(auth()->user(), $this->year, $this->month);
-        $moves = $this->movements($summary['incomes'], $summary['expenses']);
+        $save->execute(auth()->user(), $this->budgetCategory, $this->budgetAmount);
+        $this->budgetAmount = '';
+    }
+
+    public function clearBudget(string $category, DeleteExpenseBudgetAction $delete): void
+    {
+        $delete->execute(auth()->user(), $category);
+    }
+
+    public function render(MonthBalanceService $balance, BankBalanceService $banks)
+    {
+        $user = auth()->user();
+        $summary = $balance->summarize($user, $this->year, $this->month);
+        $ledger = $this->movements($summary['incomes'], $summary['expenses']);
+        $moves = $ledger
+            ->concat($this->transferMoves($user, $summary['from'], $summary['to']))
+            ->sortByDesc('stamp')
+            ->values();
+        $accounts = $banks->forUser($user);
 
         $previous = now()->setDate($this->year, $this->month, 1)->subMonth();
 
@@ -38,9 +67,15 @@ class MonthSummary extends Component
             'summary' => $summary,
             'moves' => $moves,
             'recent' => $moves->take(8),
-            'cards' => $this->highlightCards($moves),
-            'categories' => $this->expenseCategories($summary['expenses']),
+            'cards' => $this->highlightCards($ledger),
+            'categories' => $this->expenseCategories(
+                $summary['expenses'],
+                ExpenseBudget::query()->ownedBy($user)->get(),
+            ),
             'pace' => $this->monthPace($summary),
+            'accounts' => $accounts,
+            'accountTotals' => $banks->totals($accounts),
+            'budgetCategories' => Expense::CATEGORIES,
         ])->layout('layouts.app');
     }
 
@@ -191,39 +226,79 @@ class MonthSummary extends Component
 
     /**
      * @param  Collection<int, Expense>  $expenses
-     * @return list<array{label: string, usd: float, share: int, width: int}>
+     * @param  Collection<int, ExpenseBudget>  $budgets
+     * @return list<array{key: string, label: string, usd: float, share: int, width: int, limit: ?float, over: bool}>
      */
-    private function expenseCategories(Collection $expenses): array
+    private function expenseCategories(Collection $expenses, Collection $budgets): array
     {
-        $total = round((float) $expenses->sum('amount_usd'), 2);
+        $spent = $expenses
+            ->groupBy('category')
+            ->map(fn (Collection $rows): float => round((float) $rows->sum('amount_usd'), 2));
+        $limits = $budgets->mapWithKeys(fn (ExpenseBudget $budget): array => [
+            $budget->category => round((float) $budget->limit_usd, 2),
+        ]);
+        $keys = $spent->keys()->merge($limits->keys())->unique();
 
-        if ($total <= 0) {
+        if ($keys->isEmpty()) {
             return [];
         }
 
-        $grouped = $expenses
-            ->groupBy('category')
-            ->map(function (Collection $rows, string $category) use ($total): array {
-                $usd = round((float) $rows->sum('amount_usd'), 2);
+        $total = round((float) $spent->sum(), 2);
+        $largest = (float) $spent->max();
+
+        return $keys
+            ->map(function (string $category) use ($spent, $limits, $total, $largest): array {
+                $usd = round((float) ($spent[$category] ?? 0), 2);
+                $limit = $limits->has($category) ? (float) $limits[$category] : null;
 
                 return [
+                    'key' => $category,
                     'label' => Expense::CATEGORIES[$category] ?? $category,
                     'usd' => $usd,
-                    'share' => (int) round(($usd / $total) * 100),
+                    'share' => $total > 0 ? (int) round(($usd / $total) * 100) : 0,
+                    'width' => $largest > 0 ? (int) round(($usd / $largest) * 100) : 0,
+                    'limit' => $limit,
+                    'over' => $limit !== null && $usd > $limit,
                 ];
             })
             ->sortByDesc('usd')
-            ->values();
-
-        $largest = (float) $grouped->max('usd');
-
-        return $grouped
-            ->map(function (array $row) use ($largest): array {
-                $row['width'] = $largest > 0 ? (int) round(($row['usd'] / $largest) * 100) : 0;
-
-                return $row;
-            })
+            ->values()
             ->all();
+    }
+
+    /**
+     * @return Collection<int, array{
+     *     id: int,
+     *     kind: string,
+     *     stamp: string,
+     *     when: string,
+     *     concept: string,
+     *     meta: string,
+     *     usd: float,
+     *     currency: string,
+     *     native: string,
+     *     href: string
+     * }>
+     */
+    private function transferMoves(User $user, string $from, string $to): Collection
+    {
+        return Transfer::query()
+            ->ownedBy($user)
+            ->with(['fromBank', 'toBank'])
+            ->whereBetween('occurred_on', [$from, $to])
+            ->get()
+            ->map(fn (Transfer $transfer): array => $this->movement(
+                $transfer->id,
+                'move',
+                $transfer->occurred_on->format('Y-m-d').sprintf('%08d', $transfer->id),
+                $transfer->occurred_on->translatedFormat('j M'),
+                ($transfer->fromBank?->name ?? 'Banco').' → '.($transfer->toBank?->name ?? 'Banco'),
+                'Traspaso',
+                (float) $transfer->amount_usd,
+                $transfer->currency,
+                Money::format($transfer->amount, $transfer->currency),
+                route('profile').'#traspasos',
+            ));
     }
 
     /**

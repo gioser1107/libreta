@@ -25,7 +25,7 @@
     </section>
 
     <div class="lb-filters">
-        <input wire:model.live.debounce.300ms="search" type="search" placeholder="Buscar por concepto" class="lb-control grow" aria-label="Buscar por concepto">
+        <input wire:model.live.debounce.300ms="search" type="search" placeholder="Buscar en todos los meses" class="lb-control grow" aria-label="Buscar en todos los meses">
         <select wire:model.live="filterStatus" class="lb-control" aria-label="Estado">
             <option value="all">Todos los estados</option>
             @foreach($statuses as $key => $label)
@@ -61,6 +61,7 @@
                 @foreach($rows as $row)
                     @can('egresos.edit')
                         <button type="button" wire:click="edit({{ $row->id }})" wire:key="expense-{{ $row->id }}" class="lb-entry">
+                            <x-move-mark kind="out" />
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $row->concept }}</span>
                                 <span class="lb-entry-meta">
@@ -75,6 +76,7 @@
                         </button>
                     @else
                         <div class="lb-entry" wire:key="expense-{{ $row->id }}">
+                            <x-move-mark kind="out" />
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $row->concept }}</span>
                                 <span class="lb-entry-meta">{{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}@if($row->payment_method) · {{ $methods[$row->payment_method] ?? $row->payment_method }}@endif@if($row->bank) · {{ $row->bank->name }}@endif</span>

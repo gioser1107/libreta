@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ExportLedgerController;
 use App\Livewire\Actions\Logout;
 use App\Livewire\CurrencyCalculator;
 use App\Livewire\ExpenseLedger;
@@ -75,6 +76,10 @@ Route::middleware('auth')->group(function () {
         ->name('expenses.index');
 
     Route::get('/calculadora', CurrencyCalculator::class)->name('calculator');
+
+    Route::get('/exportar', ExportLedgerController::class)
+        ->middleware(['permission:ingresos.view', 'permission:egresos.view'])
+        ->name('ledger.export');
 
     Route::view('profile', 'profile')->name('profile');
 

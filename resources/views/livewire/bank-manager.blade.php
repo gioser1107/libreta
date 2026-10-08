@@ -24,6 +24,7 @@
                     @else
                         <span class="lb-entry-main">
                             <span class="lb-entry-title">{{ $bank->name }}</span>
+                            <span class="lb-entry-meta">{{ $balances[$bank->id]['label'] ?? 'Sin saldo' }}</span>
                         </span>
                         <span class="lb-row-actions">
                             <button type="button" wire:click="edit({{ $bank->id }})" class="lb-textbtn">Editar</button>
@@ -40,6 +41,22 @@
             <span class="lb-label">{{ $editingId ? 'Nombre' : 'Nuevo banco' }}</span>
             <input wire:model="name" type="text" maxlength="60" class="lb-control" @unless($editingId) placeholder="Banesco, Mercantil…" @endunless>
             @error('name') <span class="lb-error">{{ $message }}</span> @enderror
+        </label>
+        <p class="lb-note">Saldo inicial: lo que ya tenías en este banco antes de anotarlo aquí.</p>
+        <label class="lb-field">
+            <span class="lb-label">Bolívares</span>
+            <input wire:model="openingVes" type="text" inputmode="decimal" class="lb-control" placeholder="0">
+            @error('opening_ves') <span class="lb-error">{{ $message }}</span> @enderror
+        </label>
+        <label class="lb-field">
+            <span class="lb-label">Dólares</span>
+            <input wire:model="openingUsd" type="text" inputmode="decimal" class="lb-control" placeholder="0">
+            @error('opening_usd') <span class="lb-error">{{ $message }}</span> @enderror
+        </label>
+        <label class="lb-field">
+            <span class="lb-label">Euros</span>
+            <input wire:model="openingEur" type="text" inputmode="decimal" class="lb-control" placeholder="0">
+            @error('opening_eur') <span class="lb-error">{{ $message }}</span> @enderror
         </label>
         <div class="lb-row-actions">
             @if($editingId)
