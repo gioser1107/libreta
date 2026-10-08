@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Ledger\DeleteExpenseAction;
+use App\Actions\Ledger\DeleteIncomeAction;
 use App\Actions\Ledger\RecordExpenseAction;
 use App\Actions\Ledger\RecordIncomeAction;
 use App\Actions\Ledger\UpdateIncomeAction;
@@ -46,6 +48,47 @@ class PersonalLedgerTest extends TestCase
 
         $this->actingAs($stranger)->get(route('incomes.index'))->assertForbidden();
         $this->actingAs($stranger)->get(route('expenses.index'))->assertForbidden();
+    }
+
+    public function test_new_income_and_expense_are_saved_in_bolivares(): void
+    {
+        $user = $this->usuario();
+        $this->bcv('2026-08-20', 100, 110);
+
+        Livewire::actingAs($user)
+            ->test(IncomeLedger::class)
+            ->assertSet('currency', 'VES')
+            ->set('month', 8)
+            ->set('year', 2026)
+            ->set('occurred_on', '2026-08-20')
+            ->set('concept', 'Pago en bolívares')
+            ->set('category', 'sueldo')
+            ->set('amount', '100')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('currency', 'VES');
+
+        $income = Income::query()->first();
+        $this->assertNotNull($income);
+        $this->assertSame('VES', $income->currency);
+
+        Livewire::actingAs($user)
+            ->test(ExpenseLedger::class)
+            ->assertSet('currency', 'VES')
+            ->set('month', 8)
+            ->set('year', 2026)
+            ->set('occurred_on', '2026-08-20')
+            ->set('concept', 'Mercado')
+            ->set('category', 'comida')
+            ->set('amount', '50')
+            ->set('status', 'paid')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('currency', 'VES');
+
+        $expense = Expense::query()->first();
+        $this->assertNotNull($expense);
+        $this->assertSame('VES', $expense->currency);
     }
 
     public function test_income_uses_that_days_rate_and_ignores_tomorrow(): void
@@ -233,6 +276,85 @@ class PersonalLedgerTest extends TestCase
             ->assertDontSee('En qué se fue');
     }
 
+    public function test_user_removes_an_income_from_the_month(): void
+    {
+        $user = $this->usuario();
+        $this->bcv('2026-08-20', 100, 110);
+        $income = $this->recordIncome($user, 'Sueldo de agosto');
+
+        Livewire::actingAs($user)
+            ->test(IncomeLedger::class)
+            ->call('edit', $income->id)
+            ->assertSee('Borrar')
+            ->call('askRemoval')
+            ->assertSee('¿Borrar este ingreso?')
+            ->call('delete', $income->id)
+            ->assertSet('showModal', false)
+            ->assertDontSee('Sueldo de agosto');
+
+        $this->assertModelMissing($income);
+    }
+
+    public function test_user_removes_an_expense_from_the_month(): void
+    {
+        $user = $this->usuario();
+        $this->bcv('2026-08-20', 100, 110);
+        $expense = $this->recordExpense($user, 'Mercado');
+
+        Livewire::actingAs($user)
+            ->test(ExpenseLedger::class)
+            ->call('edit', $expense->id)
+            ->assertSee('Borrar')
+            ->call('askRemoval')
+            ->assertSee('¿Borrar este egreso?')
+            ->call('delete', $expense->id)
+            ->assertSet('showModal', false)
+            ->assertDontSee('Mercado');
+
+        $this->assertModelMissing($expense);
+    }
+
+    public function test_cancelling_removal_keeps_the_income(): void
+    {
+        $user = $this->usuario();
+        $this->bcv('2026-08-20', 100, 110);
+        $income = $this->recordIncome($user, 'Sueldo de agosto');
+
+        Livewire::actingAs($user)
+            ->test(IncomeLedger::class)
+            ->call('edit', $income->id)
+            ->call('askRemoval')
+            ->call('cancelRemoval')
+            ->assertSet('confirmingRemoval', false)
+            ->assertSee('Sueldo de agosto');
+
+        $this->assertModelExists($income);
+    }
+
+    public function test_another_person_cannot_remove_an_income(): void
+    {
+        $owner = $this->usuario();
+        $other = $this->usuario();
+        $this->bcv('2026-08-20', 100, 110);
+        $income = $this->recordIncome($owner, 'Sueldo secreto');
+
+        $this->actingAs($other);
+        $this->expectException(NotFoundHttpException::class);
+        app(DeleteIncomeAction::class)->execute($other, $income->id);
+    }
+
+    public function test_another_person_cannot_remove_an_expense(): void
+    {
+        $owner = $this->usuario();
+        $other = $this->usuario();
+        $this->bcv('2026-08-20', 100, 110);
+        $expense = $this->recordExpense($owner, 'Gasto secreto');
+
+        $this->actingAs($other);
+        $this->expectException(NotFoundHttpException::class);
+        app(DeleteExpenseAction::class)->execute($other, $expense->id);
+    }
+
     public function test_quote_refuses_a_movement_when_the_rate_is_missing(): void
     {
         $user = $this->usuario();
@@ -245,6 +367,36 @@ class PersonalLedgerTest extends TestCase
             'category' => 'otro',
             'currency' => 'VES',
             'amount' => '100',
+            'notes' => null,
+        ]);
+    }
+
+    private function recordIncome(User $user, string $concept): Income
+    {
+        $this->actingAs($user);
+
+        return app(RecordIncomeAction::class)->execute($user, [
+            'occurred_on' => '2026-08-20',
+            'concept' => $concept,
+            'category' => 'sueldo',
+            'currency' => 'USD',
+            'amount' => '10',
+            'notes' => null,
+        ]);
+    }
+
+    private function recordExpense(User $user, string $concept): Expense
+    {
+        $this->actingAs($user);
+
+        return app(RecordExpenseAction::class)->execute($user, [
+            'occurred_on' => '2026-08-20',
+            'concept' => $concept,
+            'category' => 'comida',
+            'currency' => 'USD',
+            'amount' => '4',
+            'payment_method' => 'efectivo',
+            'status' => 'paid',
             'notes' => null,
         ]);
     }

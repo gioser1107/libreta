@@ -36,7 +36,7 @@ new class extends Component
             <h2 class="lb-section-title">¿Eliminar la cuenta?</h2>
 
             <p class="lb-help">
-                Se borran tus ingresos, egresos y el acceso. No se puede deshacer.
+                Se borran tus bancos, ingresos, egresos y el acceso. No se puede deshacer.
             </p>
 
             <label class="lb-field" for="password">

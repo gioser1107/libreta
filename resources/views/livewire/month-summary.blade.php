@@ -1,11 +1,10 @@
 <div class="lb-page lb-home">
-    <header class="lb-head">
-        <div>
-            <h1>Resumen</h1>
-            @include('livewire.partials.month-switcher')
-        </div>
+    <header class="lb-head lb-head-period">
+        <h1>Resumen</h1>
+        @include('livewire.partials.month-switcher')
     </header>
 
+    <div class="lb-top">
     <section class="lb-hero" aria-label="Saldo del mes">
         <p class="lb-hero-kicker">Saldo de {{ mb_strtolower($months[$month] ?? 'este mes') }}</p>
         <p class="lb-hero-amount">{{ \App\Support\Money::format($summary['balance_usd'], 'USD') }}</p>
@@ -54,6 +53,7 @@
             @endif
         </a>
     </section>
+    </div>
 
     <section class="lb-highlights" aria-label="Destacados del mes">
         @foreach($cards as $card)
@@ -73,6 +73,7 @@
         @endforeach
     </section>
 
+    <div class="lb-lower">
     @if($categories !== [])
         <section class="lb-block" aria-label="Gastos por categoría">
             <div class="lb-block-head">
@@ -127,4 +128,5 @@
             @endif
         </div>
     </section>
+    </div>
 </div>

@@ -17,12 +17,13 @@ class RecordExpenseAction
     public function execute(User $user, array $input): Expense
     {
         LedgerActor::authorize($user, 'egresos', 'create');
-        $data = LedgerInput::expense($input);
+        $data = LedgerInput::expense($user, $input);
         $quoted = $this->quotes->quote($data['occurred_on'], $data['currency'], $data['amount']);
 
         return DB::transaction(function () use ($user, $data, $quoted) {
             return Expense::query()->create([
                 'user_id' => $user->id,
+                'bank_id' => $data['bank_id'],
                 'occurred_on' => $data['occurred_on'],
                 'concept' => $data['concept'],
                 'category' => $data['category'],

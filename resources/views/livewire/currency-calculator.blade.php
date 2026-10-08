@@ -1,5 +1,5 @@
 <div
-    class="lb-page lb-home"
+    class="lb-page lb-home lb-calc"
     wire:ignore
     x-data="latasaCalculator(@js($quote))"
     x-on:calculator-rates-refreshed.window="applyQuote($event.detail.quote)"
@@ -17,6 +17,8 @@
         </div>
     </header>
 
+    <div class="lb-calc-grid">
+    <div class="lb-calc-col">
     <section class="lb-hero" aria-label="Tasa del día">
         <p class="lb-hero-kicker" x-text="code.startsWith('USDT') ? meta.short : meta.name">Dólar</p>
         <p class="lb-figure-row" x-show="rate" @unless($quote['available']) x-cloak @endunless>
@@ -53,7 +55,9 @@
             <small>Binance P2P</small>
         </button>
     </div>
+    </div>
 
+    <div class="lb-calc-col">
     <section class="lb-convert" aria-label="Conversión" x-show="rate" @unless($quote['available']) x-cloak @endunless>
         <div class="lb-convert-row" x-bind:class="animating && 'is-out'" x-on:click="$refs.topAmount.focus()">
             <span class="lb-convert-code" x-text="top.code">USD</span>
@@ -109,4 +113,6 @@
     </div>
 
     <p class="lb-help lb-calc-note" x-text="infoText">Fecha de vigencia de la tasa del Banco Central de Venezuela (BCV).</p>
+    </div>
+    </div>
 </div>

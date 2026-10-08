@@ -21,6 +21,11 @@ class User extends Authenticatable implements PasskeyUser
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable;
 
+    public function banks(): HasMany
+    {
+        return $this->hasMany(Bank::class);
+    }
+
     public function incomes(): HasMany
     {
         return $this->hasMany(Income::class);

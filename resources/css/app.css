@@ -331,6 +331,7 @@ html.dark .lb-logo {
 @media (min-width: 1024px) {
     .lb-main {
         padding-bottom: 0;
+        background: var(--surface-muted);
     }
 }
 
@@ -341,7 +342,7 @@ html.dark .lb-logo {
 
 @media (min-width: 1024px) {
     .lb-page {
-        padding: 1.1rem 1.35rem 1.5rem;
+        padding: 1.35rem 1.6rem 2rem;
     }
 }
 
@@ -355,6 +356,19 @@ html.dark .lb-logo {
     justify-content: space-between;
     gap: 0.75rem;
     margin-bottom: 0.75rem;
+}
+
+.lb-head-period {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.lb-head-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
 }
 
 .lb-head h1,
@@ -380,6 +394,10 @@ html.dark .lb-logo {
     line-height: 1.45;
 }
 
+.lb-guest .lb-help {
+    text-align: center;
+}
+
 .lb-head .lb-help {
     margin-top: 0.15rem;
 }
@@ -387,7 +405,8 @@ html.dark .lb-logo {
 .lb-month {
     display: inline-flex;
     align-items: center;
-    margin-top: 0.4rem;
+    align-self: center;
+    margin-top: 0.15rem;
     border: 1px solid var(--line);
     border-radius: 999px;
     background: var(--surface);
@@ -580,6 +599,24 @@ a.lb-stat:hover strong {
     border-top: 1px solid var(--line);
 }
 
+.lb-banks .lb-entry {
+    cursor: default;
+}
+
+.lb-banks .lb-row-body {
+    border-top: 1px solid var(--line);
+}
+
+.lb-bank-error {
+    padding: 0.75rem 0.95rem 0;
+}
+
+.lb-help a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
 .lb-row {
     display: flex;
     width: 100%;
@@ -713,8 +750,10 @@ a.lb-stat:hover strong {
     color: var(--ink);
 }
 
+.lb-textbtn.is-danger,
 .lb-textbtn.is-danger:hover {
     color: var(--ink);
+    font-weight: 600;
 }
 
 .lb-list {
@@ -1009,9 +1048,24 @@ textarea.lb-control {
 }
 
 .lb-dialog-foot {
+    flex-wrap: wrap;
     justify-content: flex-end;
     border-top: 1px solid var(--line);
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.lb-dialog-foot .lb-error {
+    flex: 1 0 100%;
+}
+
+.lb-dialog-foot .lb-textbtn,
+.lb-dialog-ask {
+    margin-right: auto;
+}
+
+.lb-dialog-ask {
+    font-size: 0.875rem;
+    font-weight: 500;
 }
 
 @media (min-width: 640px) {
@@ -1104,10 +1158,12 @@ html.dark .lb-app-icon {
 }
 
 .lb-auth-name {
+    width: 100%;
     font-size: 1.35rem;
     font-weight: 600;
     letter-spacing: -0.03em;
     line-height: 1;
+    text-align: center;
 }
 
 .lb-guest .lb-control {
@@ -1133,10 +1189,12 @@ html.dark .lb-app-icon {
 .lb-auth-remember {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.65rem;
     min-height: 2.75rem;
     color: var(--ink);
     font-size: 0.95rem;
+    text-align: center;
 }
 
 .lb-guest-title {
@@ -2124,5 +2182,125 @@ a.lb-highlight:hover {
 
 .lb-calc-note {
     margin-top: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+    .lb-home,
+    .lb-page-form {
+        max-width: none;
+    }
+
+    .lb-home .lb-head-period {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .lb-home .lb-head-period .lb-month {
+        margin-top: 0;
+    }
+
+    .lb-top {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(15.5rem, 0.72fr);
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+
+    .lb-top .lb-hero {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin-bottom: 0;
+        padding: 1.5rem 1.6rem;
+    }
+
+    .lb-top .lb-hero-amount {
+        font-size: 2.75rem;
+    }
+
+    .lb-top .lb-metrics {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        margin-bottom: 0;
+    }
+
+    .lb-top .lb-metric {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0.85rem 1rem;
+    }
+
+    .lb-top .lb-metric strong {
+        font-size: 1.05rem;
+    }
+
+    .lb-highlights {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-top: 0.75rem;
+    }
+
+    .lb-lower {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.15fr);
+        gap: 1.25rem;
+        align-items: start;
+        margin-top: 1.15rem;
+    }
+
+    .lb-lower > :only-child {
+        grid-column: 1 / -1;
+    }
+
+    .lb-lower .lb-block {
+        margin-top: 0;
+    }
+
+    .lb-panels {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+    }
+
+    .lb-calc-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+        gap: 1.25rem;
+        align-items: start;
+    }
+
+    .lb-calc-grid .lb-hero {
+        padding: 1.6rem 1.7rem 1.4rem;
+    }
+
+    .lb-calc-grid .lb-hero-amount {
+        font-size: 3rem;
+    }
+
+    .lb-calc-grid .lb-convert {
+        margin-top: 0;
+    }
+
+    .lb-stats.is-3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .lb-stats.is-3 .lb-stat {
+        padding: 0.9rem 1rem;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: var(--surface);
+    }
+
+    .lb-filters {
+        align-items: center;
+    }
+
+    .lb-panel {
+        background: var(--surface);
+    }
 }
 

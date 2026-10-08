@@ -9,6 +9,8 @@
                 <livewire:profile.update-profile-information-form />
             </section>
 
+            <livewire:bank-manager />
+
             <section class="lb-panel lb-settings">
                 <button
                     type="button"

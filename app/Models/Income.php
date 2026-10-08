@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 
 #[Fillable([
     'user_id',
+    'bank_id',
     'occurred_on',
     'concept',
     'category',
@@ -62,6 +63,11 @@ class Income extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function bank(): BelongsTo
+    {
+        return $this->belongsTo(Bank::class);
+    }
+
     public function scopeOwnedBy(Builder $query, User $user): Builder
     {
         return $query->where('user_id', $user->id);
@@ -70,7 +76,7 @@ class Income extends Model
     /**
      * @return array<string, mixed>
      */
-    public static function rules(): array
+    public static function rules(User $user): array
     {
         return [
             'occurred_on' => ['required', 'date'],
@@ -78,6 +84,7 @@ class Income extends Model
             'category' => ['required', Rule::in(array_keys(self::CATEGORIES))],
             'currency' => ['required', Rule::in(array_keys(self::CURRENCIES))],
             'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:999999999.99'],
+            'bank_id' => ['nullable', 'integer', Rule::exists('banks', 'id')->where('user_id', $user->id)],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }

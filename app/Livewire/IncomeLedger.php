@@ -7,6 +7,7 @@ use App\Actions\Ledger\RecordIncomeAction;
 use App\Actions\Ledger\UpdateIncomeAction;
 use App\Exceptions\LedgerException;
 use App\Livewire\Concerns\FiltersByMonth;
+use App\Models\Bank;
 use App\Models\Income;
 use App\Services\Ledger\MoneyQuoteService;
 use App\Support\Calendar;
@@ -31,6 +32,8 @@ class IncomeLedger extends Component
 
     public bool $showModal = false;
 
+    public bool $confirmingRemoval = false;
+
     public ?int $editingId = null;
 
     public string $concept = '';
@@ -39,9 +42,11 @@ class IncomeLedger extends Component
 
     public string $occurred_on = '';
 
-    public string $currency = 'USD';
+    public string $currency = Income::CURRENCY_VES;
 
     public string $amount = '';
+
+    public string $bank_id = '';
 
     public string $notes = '';
 
@@ -74,8 +79,20 @@ class IncomeLedger extends Component
         $this->showModal = true;
     }
 
+    public function askRemoval(): void
+    {
+        Permissions::authorize('ingresos', 'delete');
+        $this->confirmingRemoval = true;
+    }
+
+    public function cancelRemoval(): void
+    {
+        $this->confirmingRemoval = false;
+    }
+
     public function save(RecordIncomeAction $record, UpdateIncomeAction $update): void
     {
+        $this->confirmingRemoval = false;
         $payload = $this->payload();
 
         try {
@@ -110,7 +127,7 @@ class IncomeLedger extends Component
             throw $e;
         } catch (\Throwable $e) {
             report($e);
-            $this->addError('search', 'No se pudo borrar. Intenta de nuevo.');
+            $this->addError('removal', 'No se pudo borrar. Intenta de nuevo.');
         }
     }
 
@@ -126,10 +143,11 @@ class IncomeLedger extends Component
             ->when($this->filterCategory !== 'all', fn ($query) => $query->where('category', $this->filterCategory));
 
         return view('livewire.income-ledger', [
-            'rows' => (clone $base)->orderByDesc('occurred_on')->orderByDesc('id')->get(),
+            'rows' => (clone $base)->with('bank')->orderByDesc('occurred_on')->orderByDesc('id')->get(),
             'months' => Calendar::MONTHS,
             'categories' => Income::CATEGORIES,
             'currencies' => Income::CURRENCIES,
+            'banks' => Bank::query()->ownedBy($user)->orderBy('name')->orderBy('id')->get(),
             'preview' => $this->preview($quotes),
             'monthUsd' => round((float) (clone $base)->sum('amount_usd'), 2),
             'monthVes' => round((float) (clone $base)->sum('amount_ves'), 2),
@@ -147,6 +165,7 @@ class IncomeLedger extends Component
             'category' => $this->category,
             'currency' => $this->currency,
             'amount' => $this->amount,
+            'bank_id' => $this->bank_id,
             'notes' => $this->notes,
         ];
     }
@@ -155,11 +174,13 @@ class IncomeLedger extends Component
     {
         $this->open = null;
         $this->editingId = null;
+        $this->confirmingRemoval = false;
         $this->concept = '';
         $this->category = 'sueldo';
         $this->occurred_on = $this->dateInViewedMonth();
-        $this->currency = 'USD';
+        $this->currency = Income::CURRENCY_VES;
         $this->amount = '';
+        $this->bank_id = '';
         $this->notes = '';
         $this->resetErrorBag();
     }
@@ -197,7 +218,9 @@ class IncomeLedger extends Component
         $this->occurred_on = $income->occurred_on->toDateString();
         $this->currency = $income->currency;
         $this->amount = (string) $income->amount;
+        $this->bank_id = $income->bank_id === null ? '' : (string) $income->bank_id;
         $this->notes = (string) ($income->notes ?? '');
+        $this->confirmingRemoval = false;
         $this->showMonthOf($this->occurred_on);
         $this->resetErrorBag();
     }

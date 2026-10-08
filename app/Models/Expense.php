@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 
 #[Fillable([
     'user_id',
+    'bank_id',
     'occurred_on',
     'concept',
     'category',
@@ -98,6 +99,16 @@ class Expense extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function bank(): BelongsTo
+    {
+        return $this->belongsTo(Bank::class);
+    }
+
+    public static function usesBank(?string $method): bool
+    {
+        return $method !== null && array_key_exists($method, self::PAYMENT_METHODS);
+    }
+
     public function scopeOwnedBy(Builder $query, User $user): Builder
     {
         return $query->where('user_id', $user->id);
@@ -106,7 +117,7 @@ class Expense extends Model
     /**
      * @return array<string, mixed>
      */
-    public static function rules(): array
+    public static function rules(User $user): array
     {
         return [
             'occurred_on' => ['required', 'date'],
@@ -115,6 +126,7 @@ class Expense extends Model
             'currency' => ['required', Rule::in(array_keys(self::CURRENCIES))],
             'amount' => ['required', 'numeric', 'gt:0', 'decimal:0,2', 'max:999999999.99'],
             'payment_method' => ['nullable', Rule::in(array_keys(self::PAYMENT_METHODS))],
+            'bank_id' => ['nullable', 'integer', Rule::exists('banks', 'id')->where('user_id', $user->id)],
             'status' => ['required', Rule::in(array_keys(self::STATUSES))],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];

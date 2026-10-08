@@ -17,7 +17,7 @@ class UpdateIncomeAction
     public function execute(User $user, int $incomeId, array $input): Income
     {
         LedgerActor::authorize($user, 'ingresos', 'edit');
-        $data = LedgerInput::income($input);
+        $data = LedgerInput::income($user, $input);
 
         return DB::transaction(function () use ($user, $incomeId, $data) {
             $income = Income::query()
@@ -29,6 +29,7 @@ class UpdateIncomeAction
 
             $quoted = $this->quotes->quote($data['occurred_on'], $data['currency'], $data['amount']);
             $income->fill([
+                'bank_id' => $data['bank_id'],
                 'occurred_on' => $data['occurred_on'],
                 'concept' => $data['concept'],
                 'category' => $data['category'],

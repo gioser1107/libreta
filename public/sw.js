@@ -1,4 +1,4 @@
-const CACHE = 'libreta-v2';
+const CACHE = 'libreta-v3';
 
 const PRECACHE = [
     '/offline.html',

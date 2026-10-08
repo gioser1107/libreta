@@ -65,7 +65,7 @@ class MonthSummary extends Component
             $row->occurred_on->format('Y-m-d').sprintf('%08d', $row->id),
             $row->occurred_on->translatedFormat('j M'),
             $row->concept,
-            Income::CATEGORIES[$row->category] ?? $row->category,
+            $this->metaWithBank(Income::CATEGORIES[$row->category] ?? $row->category, $row->bank?->name),
             (float) $row->amount_usd,
             $row->currency,
             Money::format($row->amount, $row->currency),
@@ -78,6 +78,7 @@ class MonthSummary extends Component
 
         $outgoing = $expenses->map(function (Expense $row): array {
             $meta = Expense::CATEGORIES[$row->category] ?? $row->category;
+            $meta = $this->metaWithBank($meta, $row->bank?->name);
             if ($row->status === Expense::STATUS_PENDING) {
                 $meta .= ' · Por pagar';
             }
@@ -141,6 +142,15 @@ class MonthSummary extends Component
             'native' => $native,
             'href' => $href,
         ];
+    }
+
+    private function metaWithBank(string $meta, ?string $bank): string
+    {
+        if ($bank === null || $bank === '') {
+            return $meta;
+        }
+
+        return $meta.' · '.$bank;
     }
 
     /**

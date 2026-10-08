@@ -17,7 +17,7 @@ class UpdateExpenseAction
     public function execute(User $user, int $expenseId, array $input): Expense
     {
         LedgerActor::authorize($user, 'egresos', 'edit');
-        $data = LedgerInput::expense($input);
+        $data = LedgerInput::expense($user, $input);
 
         return DB::transaction(function () use ($user, $expenseId, $data) {
             $expense = Expense::query()
@@ -29,6 +29,7 @@ class UpdateExpenseAction
 
             $quoted = $this->quotes->quote($data['occurred_on'], $data['currency'], $data['amount']);
             $expense->fill([
+                'bank_id' => $data['bank_id'],
                 'occurred_on' => $data['occurred_on'],
                 'concept' => $data['concept'],
                 'category' => $data['category'],
