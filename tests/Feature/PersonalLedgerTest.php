@@ -247,7 +247,9 @@ class PersonalLedgerTest extends TestCase
             ->assertSee('Luz')
             ->assertSee('Comida')
             ->assertSee('Quedó el 50% de lo ingresado')
+            ->assertSee('De dónde vino')
             ->assertSee('En qué se fue')
+            ->assertSee('100%')
             ->assertSee('80%')
             ->assertSee('20%')
             ->assertSee('Últimos movimientos')
@@ -255,11 +257,15 @@ class PersonalLedgerTest extends TestCase
 
         $html = $component->html();
         $this->assertMatchesRegularExpression(
-            '/Último egreso<\/span>\s*<span class="lb-highlight-title">Luz<\/span>/',
+            '/Último egreso<\/span>[\s\S]*?<span class="lb-highlight-title">Luz<\/span>/',
             $html,
         );
         $this->assertMatchesRegularExpression(
-            '/Mayor gasto<\/span>\s*<span class="lb-highlight-title">Comida<\/span>/',
+            '/Mayor gasto<\/span>[\s\S]*?<span class="lb-highlight-title">Comida<\/span>/',
+            $html,
+        );
+        $this->assertMatchesRegularExpression(
+            '/Último ingreso<\/span>[\s\S]*?<span class="lb-highlight-title">Sueldo<\/span>/',
             $html,
         );
     }
@@ -352,6 +358,7 @@ class PersonalLedgerTest extends TestCase
             ->assertSee('Sin ingresos')
             ->assertSee('Sin egresos')
             ->assertSee('No hay movimientos en agosto 2026.')
+            ->assertDontSee('De dónde vino')
             ->assertDontSee('En qué se fue');
     }
 

@@ -24,7 +24,7 @@ class TransfersTest extends TestCase
         $user = $this->usuario();
 
         $this->actingAs($user)
-            ->get(route('profile'))
+            ->get(route('profile', ['seccion' => 'traspasos']))
             ->assertSee('Pasar entre bancos')
             ->assertSeeLivewire(Transfers::class);
     }

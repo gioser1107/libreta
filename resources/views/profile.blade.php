@@ -1,20 +1,48 @@
 <x-app-layout>
     <div class="lb-page lb-page-form">
         <header class="lb-head">
-            <h1>Cuenta</h1>
+            <div>
+                @if($section)
+                    <a href="{{ route('profile') }}" wire:navigate class="lb-back">Cuenta</a>
+                @endif
+                <h1>{{ $sectionTitle }}</h1>
+            </div>
         </header>
 
-        <div class="lb-panels">
+        @if($section === null)
+            <section class="lb-panel lb-settings" aria-label="Secciones de la cuenta">
+                <a href="{{ route('profile', ['seccion' => 'perfil']) }}" wire:navigate class="lb-row">
+                    <span>Perfil</span>
+                    <span class="lb-row-value">Nombre y correo</span>
+                </a>
+                <a href="{{ route('profile', ['seccion' => 'bancos']) }}" wire:navigate class="lb-row">
+                    <span>Bancos</span>
+                    <span class="lb-row-value">Saldos</span>
+                </a>
+                <a href="{{ route('profile', ['seccion' => 'traspasos']) }}" wire:navigate class="lb-row">
+                    <span>Traspasos</span>
+                    <span class="lb-row-value">Entre tus bancos</span>
+                </a>
+                <a href="{{ route('profile', ['seccion' => 'fijos']) }}" wire:navigate class="lb-row">
+                    <span>Cada mes</span>
+                    <span class="lb-row-value">Sueldo, alquiler</span>
+                </a>
+                <a href="{{ route('profile', ['seccion' => 'ajustes']) }}" wire:navigate class="lb-row">
+                    <span>Ajustes</span>
+                    <span class="lb-row-value">Clave y apariencia</span>
+                </a>
+            </section>
+        @elseif($section === 'perfil')
             <section class="lb-panel">
                 <livewire:profile.update-profile-information-form />
             </section>
-
+        @elseif($section === 'bancos')
             <livewire:bank-manager />
-
+        @elseif($section === 'traspasos')
             <livewire:transfers />
-
+        @elseif($section === 'fijos')
             <livewire:recurring-entries />
-
+        @else
             <section class="lb-panel lb-settings">
                 @include('layouts.partials.theme-toggle', ['variant' => 'row'])
 
@@ -26,8 +54,8 @@
                     <button type="submit" class="lb-row">Cerrar sesión</button>
                 </form>
             </section>
-        </div>
 
-        <livewire:profile.delete-user-form />
+            <livewire:profile.delete-user-form />
+        @endif
     </div>
 </x-app-layout>

@@ -81,7 +81,21 @@ Route::middleware('auth')->group(function () {
         ->middleware(['permission:ingresos.view', 'permission:egresos.view'])
         ->name('ledger.export');
 
-    Route::view('profile', 'profile')->name('profile');
+    Route::get('profile', function () {
+        $sections = [
+            'perfil' => 'Perfil',
+            'bancos' => 'Bancos',
+            'traspasos' => 'Traspasos',
+            'fijos' => 'Cada mes',
+            'ajustes' => 'Ajustes',
+        ];
+        $section = request()->string('seccion')->toString();
+
+        return view('profile', [
+            'section' => array_key_exists($section, $sections) ? $section : null,
+            'sectionTitle' => $sections[$section] ?? 'Cuenta',
+        ]);
+    })->name('profile');
 
     Route::post('logout', function (Logout $logout) {
         $logout();

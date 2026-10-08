@@ -32,7 +32,7 @@ class BankAccountsTest extends TestCase
         $user = $this->usuario();
 
         $this->actingAs($user)
-            ->get(route('profile'))
+            ->get(route('profile', ['seccion' => 'bancos']))
             ->assertSee('Mis bancos')
             ->assertSeeLivewire(BankManager::class);
     }

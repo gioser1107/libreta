@@ -43,7 +43,11 @@
         <a href="{{ route('incomes.index', ['month' => $month, 'year' => $year]) }}" wire:navigate class="lb-metric">
             <span>Ingresos</span>
             <strong>{{ \App\Support\Money::format($summary['income_usd'], 'USD') }}</strong>
-            <em>{{ $pace['income_count'] === 1 ? '1 movimiento' : $pace['income_count'].' movimientos' }}</em>
+            @if($pace['daily_income'] !== null)
+                <em>≈ {{ \App\Support\Money::format($pace['daily_income'], 'USD') }} / día</em>
+            @else
+                <em>{{ $pace['income_count'] === 1 ? '1 movimiento' : $pace['income_count'].' movimientos' }}</em>
+            @endif
         </a>
         <a href="{{ route('expenses.index', ['month' => $month, 'year' => $year]) }}" wire:navigate class="lb-metric">
             <span>Egresos</span>
@@ -96,9 +100,19 @@
             @if($card['move'])
                 <a href="{{ $card['move']['href'] }}" wire:navigate wire:key="card-{{ $loop->index }}" class="lb-highlight">
                     <span class="lb-kicker">{{ $card['label'] }}</span>
-                    <span class="lb-highlight-title">{{ $card['move']['concept'] }}</span>
-                    <span class="lb-highlight-meta">{{ $card['move']['when'] }} · {{ $card['move']['meta'] }}</span>
-                    <span class="lb-highlight-amt">{{ $card['move']['kind'] === 'in' ? '' : '−' }}{{ \App\Support\Money::format($card['move']['usd'], 'USD') }}</span>
+                    <span class="lb-highlight-row">
+                        <x-move-mark :kind="$card['move']['kind']" />
+                        <span class="lb-highlight-copy">
+                            <span class="lb-highlight-title">{{ $card['move']['concept'] }}</span>
+                            <span class="lb-highlight-meta">{{ $card['move']['when'] }} · {{ $card['move']['meta'] }}</span>
+                        </span>
+                        <span class="lb-highlight-amt">
+                            {{ $card['move']['kind'] === 'out' ? '−' : '+' }}{{ \App\Support\Money::format($card['move']['usd'], 'USD') }}
+                            @if($card['move']['currency'] !== 'USD')
+                                <small>{{ $card['move']['native'] }}</small>
+                            @endif
+                        </span>
+                    </span>
                 </a>
             @else
                 <div wire:key="card-{{ $loop->index }}" class="lb-highlight is-empty">
@@ -109,53 +123,80 @@
         @endforeach
     </section>
 
-    <div class="lb-lower">
-        @if($categories !== [])
-        <section class="lb-block" aria-label="Gastos por categoría">
-            <div class="lb-block-head">
-                <h2 class="lb-section-title">En qué se fue</h2>
-            </div>
-            <div class="lb-panel">
-                    <div class="lb-cats">
-                        @foreach($categories as $category)
-                            <div wire:key="cat-{{ $category['key'] }}">
-                                <div class="lb-cat-top">
-                                    <strong>{{ $category['label'] }}</strong>
-                                    <span @class(['is-over' => $category['over']])>
-                                        @if($category['limit'] !== null)
-                                            {{ \App\Support\Money::format($category['usd'], 'USD') }} de {{ \App\Support\Money::format($category['limit'], 'USD') }}
-                                            @if($category['over'])
-                                                · pasado
-                                            @endif
-                                        @else
-                                            {{ \App\Support\Money::format($category['usd'], 'USD') }} · {{ $category['share'] }}%
-                                        @endif
-                                    </span>
-                                    @if($category['limit'] !== null)
-                                        <button type="button" wire:click="clearBudget('{{ $category['key'] }}')" class="lb-textbtn">Quitar</button>
-                                    @endif
-                                </div>
-                                <div class="lb-track" aria-hidden="true">
-                                    <span @class(['is-over' => $category['over']]) style="width: {{ $category['width'] }}%"></span>
-                                </div>
-                            </div>
-                        @endforeach
+    @if($incomeCategories !== [] || $categories !== [])
+        <div class="lb-pair">
+            @if($incomeCategories !== [])
+                <section class="lb-block" aria-label="Ingresos por categoría">
+                    <div class="lb-block-head">
+                        <h2 class="lb-section-title">De dónde vino</h2>
                     </div>
-                <form wire:submit="saveBudget" class="lb-budget">
-                    <select wire:model="budgetCategory" class="lb-control" aria-label="Categoría del tope">
-                        @foreach($budgetCategories as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    <input wire:model="budgetAmount" type="text" inputmode="decimal" class="lb-control" placeholder="Tope en USD" aria-label="Tope en dólares">
-                    <button type="submit" class="lb-btn lb-btn-primary" wire:loading.attr="disabled" wire:target="saveBudget">Poner tope</button>
-                    @error('limit_usd') <span class="lb-error">{{ $message }}</span> @enderror
-                    @error('category') <span class="lb-error">{{ $message }}</span> @enderror
-                </form>
-            </div>
-        </section>
-        @endif
+                    <div class="lb-panel">
+                        <div class="lb-cats">
+                            @foreach($incomeCategories as $category)
+                                <div wire:key="incat-{{ $category['key'] }}">
+                                    <div class="lb-cat-top">
+                                        <strong>{{ $category['label'] }}</strong>
+                                        <span>{{ \App\Support\Money::format($category['usd'], 'USD') }} · {{ $category['share'] }}%</span>
+                                    </div>
+                                    <div class="lb-track" aria-hidden="true">
+                                        <span style="width: {{ $category['width'] }}%"></span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </section>
+            @endif
 
+            @if($categories !== [])
+                <section class="lb-block" aria-label="Gastos por categoría">
+                    <div class="lb-block-head">
+                        <h2 class="lb-section-title">En qué se fue</h2>
+                    </div>
+                    <div class="lb-panel">
+                        <div class="lb-cats">
+                            @foreach($categories as $category)
+                                <div wire:key="cat-{{ $category['key'] }}">
+                                    <div class="lb-cat-top">
+                                        <strong>{{ $category['label'] }}</strong>
+                                        <span @class(['is-over' => $category['over']])>
+                                            @if($category['limit'] !== null)
+                                                {{ \App\Support\Money::format($category['usd'], 'USD') }} de {{ \App\Support\Money::format($category['limit'], 'USD') }}
+                                                @if($category['over'])
+                                                    · pasado
+                                                @endif
+                                            @else
+                                                {{ \App\Support\Money::format($category['usd'], 'USD') }} · {{ $category['share'] }}%
+                                            @endif
+                                        </span>
+                                        @if($category['limit'] !== null)
+                                            <button type="button" wire:click="clearBudget('{{ $category['key'] }}')" class="lb-textbtn">Quitar</button>
+                                        @endif
+                                    </div>
+                                    <div class="lb-track" aria-hidden="true">
+                                        <span @class(['is-over' => $category['over']]) style="width: {{ $category['width'] }}%"></span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        <form wire:submit="saveBudget" class="lb-budget">
+                            <select wire:model="budgetCategory" class="lb-control" aria-label="Categoría del tope">
+                                @foreach($budgetCategories as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <input wire:model="budgetAmount" type="text" inputmode="decimal" class="lb-control" placeholder="Tope en USD" aria-label="Tope en dólares">
+                            <button type="submit" class="lb-btn lb-btn-primary" wire:loading.attr="disabled" wire:target="saveBudget">Poner tope</button>
+                            @error('limit_usd') <span class="lb-error">{{ $message }}</span> @enderror
+                            @error('category') <span class="lb-error">{{ $message }}</span> @enderror
+                        </form>
+                    </div>
+                </section>
+            @endif
+        </div>
+    @endif
+
+    <div class="lb-lower">
     <section class="lb-block" aria-label="Últimos movimientos">
         <div class="lb-block-head">
             <h2 class="lb-section-title">Últimos movimientos</h2>
@@ -176,7 +217,7 @@
                                 <span class="lb-entry-meta">{{ $move['when'] }} · {{ $move['kind'] === 'in' ? 'Ingreso' : ($move['kind'] === 'move' ? 'Traspaso' : 'Egreso') }} · {{ $move['meta'] }}</span>
                             </span>
                             <span class="lb-entry-amt">
-                                {{ $move['kind'] === 'out' ? '−' : '' }}{{ \App\Support\Money::format($move['usd'], 'USD') }}
+                                {{ $move['kind'] === 'out' ? '−' : ($move['kind'] === 'in' ? '+' : '') }}{{ \App\Support\Money::format($move['usd'], 'USD') }}
                                 @if($move['currency'] !== 'USD')
                                     <small>{{ $move['native'] }}</small>
                                 @endif

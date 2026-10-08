@@ -68,6 +68,7 @@ class MonthSummary extends Component
             'moves' => $moves,
             'recent' => $moves->take(8),
             'cards' => $this->highlightCards($ledger),
+            'incomeCategories' => $this->incomeCategories($summary['incomes']),
             'categories' => $this->expenseCategories(
                 $summary['expenses'],
                 ExpenseBudget::query()->ownedBy($user)->get(),
@@ -225,6 +226,38 @@ class MonthSummary extends Component
     }
 
     /**
+     * @param  Collection<int, Income>  $incomes
+     * @return list<array{key: string, label: string, usd: float, share: int, width: int}>
+     */
+    private function incomeCategories(Collection $incomes): array
+    {
+        $earned = $incomes
+            ->groupBy('category')
+            ->map(fn (Collection $rows): float => round((float) $rows->sum('amount_usd'), 2));
+
+        if ($earned->isEmpty()) {
+            return [];
+        }
+
+        $total = round((float) $earned->sum(), 2);
+        $largest = (float) $earned->max();
+
+        return $earned
+            ->map(function (float $usd, string $category) use ($total, $largest): array {
+                return [
+                    'key' => $category,
+                    'label' => Income::CATEGORIES[$category] ?? $category,
+                    'usd' => round($usd, 2),
+                    'share' => $total > 0 ? (int) round(($usd / $total) * 100) : 0,
+                    'width' => $largest > 0 ? (int) round(($usd / $largest) * 100) : 0,
+                ];
+            })
+            ->sortByDesc('usd')
+            ->values()
+            ->all();
+    }
+
+    /**
      * @param  Collection<int, Expense>  $expenses
      * @param  Collection<int, ExpenseBudget>  $budgets
      * @return list<array{key: string, label: string, usd: float, share: int, width: int, limit: ?float, over: bool}>
@@ -297,7 +330,7 @@ class MonthSummary extends Component
                 (float) $transfer->amount_usd,
                 $transfer->currency,
                 Money::format($transfer->amount, $transfer->currency),
-                route('profile').'#traspasos',
+                route('profile', ['seccion' => 'traspasos']),
             ));
     }
 
@@ -311,6 +344,7 @@ class MonthSummary extends Component
      * }  $summary
      * @return array{
      *     caption: ?string,
+     *     daily_income: ?float,
      *     daily_expense: ?float,
      *     income_count: int,
      *     expense_count: int,
@@ -334,16 +368,17 @@ class MonthSummary extends Component
 
         return [
             'caption' => $caption,
-            'daily_expense' => $this->dailyExpense($expense),
+            'daily_income' => $this->dailyAverage($income),
+            'daily_expense' => $this->dailyAverage($expense),
             'income_count' => $summary['incomes']->count(),
             'expense_count' => $summary['expenses']->count(),
             'pending_count' => $summary['expenses']->where('status', Expense::STATUS_PENDING)->count(),
         ];
     }
 
-    private function dailyExpense(float $expense): ?float
+    private function dailyAverage(float $total): ?float
     {
-        if ($expense <= 0) {
+        if ($total <= 0) {
             return null;
         }
 
@@ -357,6 +392,6 @@ class MonthSummary extends Component
 
         $days = $today->gt($end) ? $end->day : $today->day;
 
-        return round($expense / $days, 2);
+        return round($total / $days, 2);
     }
 }

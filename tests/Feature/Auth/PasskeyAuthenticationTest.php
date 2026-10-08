@@ -23,7 +23,7 @@ class PasskeyAuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->get(route('profile'))
+            ->get(route('profile', ['seccion' => 'ajustes']))
             ->assertOk()
             ->assertSeeVolt('profile.manage-passkeys')
             ->assertSee('Activar Face ID');

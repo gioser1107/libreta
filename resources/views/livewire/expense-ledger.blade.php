@@ -3,35 +3,24 @@
         <div class="lb-head-row">
             <h1>Egresos</h1>
             @can('egresos.create')
-                <button type="button" wire:click="openModal" class="lb-btn lb-btn-primary">Nuevo egreso</button>
+                <button type="button" wire:click="openModal" class="lb-btn lb-btn-primary">Nuevo</button>
             @endcan
         </div>
         @include('livewire.partials.month-switcher')
     </header>
 
-    <section class="lb-stats is-3" aria-label="Total de egresos">
-        <div class="lb-stat">
-            <span>Total en dólares</span>
-            <strong>{{ \App\Support\Money::format($monthUsd, 'USD') }}</strong>
-        </div>
-        <div class="lb-stat">
-            <span>Total en bolívares</span>
-            <strong>{{ \App\Support\Money::format($monthVes, 'VES') }}</strong>
-        </div>
-        <div class="lb-stat">
-            <span>Por pagar</span>
-            <strong @class(['is-warn' => $pendingUsd > 0])>{{ \App\Support\Money::format($pendingUsd, 'USD') }}</strong>
-        </div>
-    </section>
+    <p class="lb-total-line">
+        <strong>{{ \App\Support\Money::format($monthUsd, 'USD') }}</strong>
+        <span>{{ \App\Support\Money::format($monthVes, 'VES') }}</span>
+        @if($filterStatus !== 'all')
+            <button type="button" wire:click="$set('filterStatus', 'all')" class="lb-textbtn">Ver todos</button>
+        @elseif($pendingUsd > 0)
+            <button type="button" wire:click="$set('filterStatus', 'pending')" class="lb-textbtn">Por pagar {{ \App\Support\Money::format($pendingUsd, 'USD') }}</button>
+        @endif
+    </p>
 
     <div class="lb-filters">
         <input wire:model.live.debounce.300ms="search" type="search" placeholder="Buscar en todos los meses" class="lb-control grow" aria-label="Buscar en todos los meses">
-        <select wire:model.live="filterStatus" class="lb-control" aria-label="Estado">
-            <option value="all">Todos los estados</option>
-            @foreach($statuses as $key => $label)
-                <option value="{{ $key }}">{{ $label }}</option>
-            @endforeach
-        </select>
         <select wire:model.live="filterCategory" class="lb-control" aria-label="Categoría">
             <option value="all">Todas las categorías</option>
             @foreach($categories as $key => $label)
@@ -53,7 +42,7 @@
                     <p>No hay egresos en {{ mb_strtolower($months[$month] ?? 'este mes') }} {{ $year }}.</p>
                 @endif
                 @can('egresos.create')
-                    <button type="button" wire:click="openModal" class="lb-btn lb-btn-primary">Nuevo egreso</button>
+                    <button type="button" wire:click="openModal" class="lb-btn lb-btn-primary">Nuevo</button>
                 @endcan
             </div>
         @else
@@ -65,8 +54,10 @@
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $row->concept }}</span>
                                 <span class="lb-entry-meta">
-                                    {{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}@if($row->payment_method) · {{ $methods[$row->payment_method] ?? $row->payment_method }}@endif@if($row->bank) · {{ $row->bank->name }}@endif
-                                    <span @class(['lb-badge', 'is-pending' => $row->status === 'pending', 'is-paid' => $row->status === 'paid'])>{{ $statuses[$row->status] ?? $row->status }}</span>
+                                    {{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}@if($row->bank) · {{ $row->bank->name }}@endif
+                                    @if($row->status === 'pending')
+                                        <span class="lb-badge is-pending">{{ $statuses[$row->status] }}</span>
+                                    @endif
                                 </span>
                             </span>
                             <span class="lb-entry-amt">
@@ -79,7 +70,11 @@
                             <x-move-mark kind="out" />
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $row->concept }}</span>
-                                <span class="lb-entry-meta">{{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}@if($row->payment_method) · {{ $methods[$row->payment_method] ?? $row->payment_method }}@endif@if($row->bank) · {{ $row->bank->name }}@endif</span>
+                                <span class="lb-entry-meta">{{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}@if($row->bank) · {{ $row->bank->name }}@endif
+                                    @if($row->status === 'pending')
+                                        <span class="lb-badge is-pending">{{ $statuses[$row->status] }}</span>
+                                    @endif
+                                </span>
                             </span>
                             <span class="lb-entry-amt">{{ \App\Support\Money::format($row->amount_usd, 'USD') }}</span>
                         </div>

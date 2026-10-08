@@ -15,13 +15,32 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->get('/profile');
-
-        $response
+        $this->actingAs($user)
+            ->get('/profile')
             ->assertOk()
-            ->assertSeeVolt('profile.update-profile-information-form')
+            ->assertSee('Perfil')
+            ->assertSee('Bancos')
+            ->assertSee('Traspasos')
+            ->assertSee('Cada mes')
+            ->assertSee('Ajustes')
+            ->assertDontSee('Mis bancos');
+
+        $this->actingAs($user)
+            ->get(route('profile', ['seccion' => 'perfil']))
+            ->assertOk()
+            ->assertSeeVolt('profile.update-profile-information-form');
+
+        $this->actingAs($user)
+            ->get(route('profile', ['seccion' => 'ajustes']))
+            ->assertOk()
             ->assertSeeVolt('profile.update-password-form')
             ->assertSeeVolt('profile.delete-user-form');
+
+        $this->actingAs($user)
+            ->get(route('profile', ['seccion' => 'fijos']))
+            ->assertOk()
+            ->assertSee('Nada se repite todavía.')
+            ->assertDontSee('Mis bancos');
     }
 
     public function test_profile_information_can_be_updated(): void
