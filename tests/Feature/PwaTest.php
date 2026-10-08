@@ -18,7 +18,8 @@ class PwaTest extends TestCase
 
         $manifest = $response->json();
 
-        $this->assertSame('Libreta', $manifest['name']);
+        $this->assertSame('Kontrola', $manifest['name']);
+        $this->assertSame('Kontrola', $manifest['short_name']);
         $this->assertSame('standalone', $manifest['display']);
         $this->assertSame('/', $manifest['start_url']);
         $this->assertSame('/', $manifest['scope']);
@@ -30,6 +31,7 @@ class PwaTest extends TestCase
         $this->get(route('login'))
             ->assertOk()
             ->assertSee('rel="manifest"', false)
+            ->assertSee('apple-mobile-web-app-title" content="Kontrola"', false)
             ->assertSee('apple-mobile-web-app-capable', false)
             ->assertSee('apple-touch-icon', false)
             ->assertSee('id="lb-splash"', false)

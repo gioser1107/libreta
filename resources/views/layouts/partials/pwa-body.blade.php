@@ -10,7 +10,7 @@
     <div class="lb-install-card">
         <img src="{{ asset('icons/apple-touch-icon.png') }}" alt="" width="44" height="44">
         <div>
-            <strong>Instalar {{ config('app.name') }}</strong>
+            <strong>Instalar {{ config('libreta.company') }}</strong>
             <p id="lb-install-text">Se abre a pantalla completa, como una app.</p>
         </div>
         <button id="lb-install-action" type="button">Instalar</button>

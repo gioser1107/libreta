@@ -18,14 +18,14 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="{{ $lbDark ? 'black' : 'default' }}">
-<meta name="apple-mobile-web-app-title" content="{{ config('app.name') }}">
-<meta name="application-name" content="{{ config('app.name') }}">
+<meta name="apple-mobile-web-app-title" content="{{ config('libreta.company') }}">
+<meta name="application-name" content="{{ config('libreta.company') }}">
 <meta name="format-detection" content="telephone=no">
 
-<link rel="manifest" href="{{ route('pwa.manifest') }}">
-<link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+<link rel="manifest" href="{{ route('pwa.manifest', absolute: false) }}">
 <link rel="icon" href="{{ asset('icons/favicon-32.png') }}" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="{{ asset('icons/apple-touch-icon.png') }}">
+<link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{ asset('icons/apple-touch-icon.png') }}" sizes="180x180">
 
 @foreach ($lbSplashes as $splash)
     <link rel="apple-touch-startup-image" media="screen and (device-width: {{ $splash['w'] }}px) and (device-height: {{ $splash['h'] }}px) and (-webkit-device-pixel-ratio: {{ $splash['r'] }}) and (orientation: portrait) and (prefers-color-scheme: light)" href="{{ asset('splash/'.$splash['file'].'-light.png') }}">

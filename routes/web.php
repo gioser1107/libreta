@@ -14,7 +14,7 @@ Route::get('/', function () {
 });
 
 Route::get('/manifest.webmanifest', function () {
-    $name = (string) config('app.name', 'Libreta');
+    $name = (string) config('libreta.company');
 
     return response()->json([
         'id' => '/',
@@ -57,7 +57,7 @@ Route::get('/manifest.webmanifest', function () {
         ],
     ], 200, [
         'Content-Type' => 'application/manifest+json',
-        'Cache-Control' => 'public, max-age=3600',
+        'Cache-Control' => 'no-cache',
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 })->name('pwa.manifest');
 

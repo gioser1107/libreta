@@ -3,6 +3,24 @@ import './pwa';
 import './page-loader';
 import './calculator';
 
+function syncKeyboardInset() {
+    const viewport = window.visualViewport;
+
+    if (! viewport) {
+        return;
+    }
+
+    const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+
+    document.documentElement.style.setProperty('--lb-keyboard', `${Math.round(inset)}px`);
+}
+
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncKeyboardInset);
+    window.visualViewport.addEventListener('scroll', syncKeyboardInset);
+    syncKeyboardInset();
+}
+
 document.addEventListener('click', (event) => {
     const link = event.target instanceof Element ? event.target.closest('a[data-keep-period]') : null;
 

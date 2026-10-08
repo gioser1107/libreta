@@ -69,6 +69,7 @@
     </section>
 
     @if($showModal)
+        @teleport('body')
         <div class="lb-overlay" wire:click.self="closeModal">
             <form wire:submit="save" class="lb-dialog" role="dialog" aria-modal="true" aria-labelledby="income-dialog-title" wire:keydown.escape="closeModal">
                 <div class="lb-dialog-head">
@@ -132,5 +133,6 @@
                 </div>
             </form>
         </div>
+        @endteleport
     @endif
 </div>

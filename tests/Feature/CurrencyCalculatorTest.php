@@ -30,15 +30,14 @@ class CurrencyCalculatorTest extends TestCase
             ->get(route('calculator'))
             ->assertOk()
             ->assertSee('Calculadora')
-            ->assertSee('EL')
-            ->assertSee('DÓLAR')
+            ->assertSee('Dólar')
             ->assertSee('874,73')
             ->assertSee('bolívares')
             ->assertSee('8 de Octubre de 2026')
             ->assertSee('Brecha BCV vs USDT')
             ->assertSee($buyGap)
             ->assertSee($sellGap)
-            ->assertSee('USDT Compra')
+            ->assertSee('USDT compra')
             ->assertSee('Restablecer');
 
         Http::assertSent(fn ($request): bool => str_contains($request->url(), 'friendly/c2c/adv/search')
