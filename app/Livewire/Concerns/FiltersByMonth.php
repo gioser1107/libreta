@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Concerns;
 
+use Illuminate\Support\Carbon;
 use Livewire\Attributes\Url;
 
 trait FiltersByMonth
@@ -52,5 +53,28 @@ trait FiltersByMonth
         if (method_exists($this, 'resetPage')) {
             $this->resetPage();
         }
+    }
+
+    protected function dateInViewedMonth(): string
+    {
+        $today = now();
+
+        if ($today->year === $this->year && $today->month === $this->month) {
+            return $today->toDateString();
+        }
+
+        return now()->setDate($this->year, $this->month, 1)->toDateString();
+    }
+
+    protected function showMonthOf(string $date): void
+    {
+        $cursor = Carbon::parse($date);
+
+        if ($cursor->year < 2020 || $cursor->year > 2100) {
+            return;
+        }
+
+        $this->year = $cursor->year;
+        $this->month = $cursor->month;
     }
 }

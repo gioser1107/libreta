@@ -47,7 +47,11 @@
     <section class="lb-panel">
         @if($rows->isEmpty())
             <div class="lb-empty">
-                <p>No hay egresos en {{ mb_strtolower($months[$month] ?? 'este mes') }} {{ $year }}.</p>
+                @if($search !== '' || $filterCategory !== 'all' || $filterStatus !== 'all')
+                    <p>Ningún egreso coincide.</p>
+                @else
+                    <p>No hay egresos en {{ mb_strtolower($months[$month] ?? 'este mes') }} {{ $year }}.</p>
+                @endif
                 @can('egresos.create')
                     <button type="button" wire:click="openModal" class="lb-btn lb-btn-primary">Nuevo egreso</button>
                 @endcan
@@ -56,11 +60,11 @@
             <div class="lb-list">
                 @foreach($rows as $row)
                     @can('egresos.edit')
-                        <button type="button" wire:click="edit({{ $row->id }})" class="lb-entry">
+                        <button type="button" wire:click="edit({{ $row->id }})" wire:key="expense-{{ $row->id }}" class="lb-entry">
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $row->concept }}</span>
                                 <span class="lb-entry-meta">
-                                    {{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}
+                                    {{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}@if($row->payment_method) · {{ $methods[$row->payment_method] ?? $row->payment_method }}@endif
                                     <span @class(['lb-badge', 'is-pending' => $row->status === 'pending', 'is-paid' => $row->status === 'paid'])>{{ $statuses[$row->status] ?? $row->status }}</span>
                                 </span>
                             </span>
@@ -70,69 +74,25 @@
                             </span>
                         </button>
                     @else
-                        <div class="lb-entry">
+                        <div class="lb-entry" wire:key="expense-{{ $row->id }}">
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $row->concept }}</span>
-                                <span class="lb-entry-meta">{{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}</span>
+                                <span class="lb-entry-meta">{{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}@if($row->payment_method) · {{ $methods[$row->payment_method] ?? $row->payment_method }}@endif</span>
                             </span>
                             <span class="lb-entry-amt">{{ \App\Support\Money::format($row->amount_usd, 'USD') }}</span>
                         </div>
                     @endcan
                 @endforeach
             </div>
-
-            <div class="lb-table-wrap">
-                <table class="lb-table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Concepto</th>
-                            <th>Categoría</th>
-                            <th>Estado</th>
-                            <th class="lb-num">Monto</th>
-                            <th class="lb-num">En dólares</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($rows as $row)
-                            <tr>
-                                <td class="lb-muted">{{ $row->occurred_on->format('d/m/Y') }}</td>
-                                <td>{{ $row->concept }}</td>
-                                <td class="lb-muted">{{ $categories[$row->category] ?? $row->category }}</td>
-                                <td>
-                                    <span @class(['lb-badge', 'is-pending' => $row->status === 'pending', 'is-paid' => $row->status === 'paid'])>{{ $statuses[$row->status] ?? $row->status }}</span>
-                                </td>
-                                <td class="lb-num">{{ \App\Support\Money::format($row->amount, $row->currency) }}</td>
-                                <td class="lb-num">{{ \App\Support\Money::format($row->amount_usd, 'USD') }}</td>
-                                <td>
-                                    <div class="lb-row-actions">
-                                        @can('egresos.edit')
-                                            <button type="button" wire:click="edit({{ $row->id }})" class="lb-textbtn">Editar</button>
-                                        @endcan
-                                        @can('egresos.delete')
-                                            <button type="button" wire:click="delete({{ $row->id }})" wire:confirm="¿Borrar este egreso?" class="lb-textbtn is-danger">Borrar</button>
-                                        @endcan
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            @if($rows->hasPages())
-                <div class="lb-pager">{{ $rows->links() }}</div>
-            @endif
         @endif
     </section>
 
     @if($showModal)
-        <div class="lb-overlay" wire:click.self="$set('showModal', false)">
-            <form wire:submit="save" class="lb-dialog" role="dialog" aria-modal="true" aria-labelledby="expense-dialog-title" wire:keydown.escape="$set('showModal', false)">
+        <div class="lb-overlay" wire:click.self="closeModal">
+            <form wire:submit="save" class="lb-dialog" role="dialog" aria-modal="true" aria-labelledby="expense-dialog-title" wire:keydown.escape="closeModal">
                 <div class="lb-dialog-head">
                     <h2 id="expense-dialog-title">{{ $editingId ? 'Editar egreso' : 'Nuevo egreso' }}</h2>
-                    <button type="button" wire:click="$set('showModal', false)" class="lb-textbtn">Cerrar</button>
+                    <button type="button" wire:click="closeModal" class="lb-textbtn">Cerrar</button>
                 </div>
                 <div class="lb-form">
                     <label class="lb-field">
@@ -202,7 +162,7 @@
                     @endif
                 </div>
                 <div class="lb-dialog-foot">
-                    <button type="button" wire:click="$set('showModal', false)" class="lb-btn lb-btn-ghost">Cancelar</button>
+                    <button type="button" wire:click="closeModal" class="lb-btn lb-btn-ghost">Cancelar</button>
                     <button type="submit" class="lb-btn lb-btn-primary" wire:loading.attr="disabled" wire:target="save">
                         <span wire:loading.remove wire:target="save">Guardar</span>
                         <span wire:loading wire:target="save">Guardando…</span>

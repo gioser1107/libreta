@@ -28,6 +28,7 @@ class MonthSummary extends Component
         $summary = $balance->summarize(auth()->user(), $this->year, $this->month);
 
         $incoming = $summary['incomes']->map(fn (Income $row): array => [
+            'id' => $row->id,
             'kind' => 'in',
             'stamp' => $row->occurred_on->format('Y-m-d').sprintf('%08d', $row->id),
             'when' => $row->occurred_on->format('d/m/Y'),
@@ -35,7 +36,11 @@ class MonthSummary extends Component
             'concept' => $row->concept,
             'meta' => Income::CATEGORIES[$row->category] ?? $row->category,
             'usd' => (float) $row->amount_usd,
-            'href' => route('incomes.index', ['month' => $this->month, 'year' => $this->year]),
+            'href' => route('incomes.index', [
+                'month' => $this->month,
+                'year' => $this->year,
+                'open' => $row->id,
+            ]),
         ]);
 
         $outgoing = $summary['expenses']->map(function (Expense $row): array {
@@ -45,6 +50,7 @@ class MonthSummary extends Component
             }
 
             return [
+                'id' => $row->id,
                 'kind' => 'out',
                 'stamp' => $row->occurred_on->format('Y-m-d').sprintf('%08d', $row->id),
                 'when' => $row->occurred_on->format('d/m/Y'),
@@ -52,7 +58,11 @@ class MonthSummary extends Component
                 'concept' => $row->concept,
                 'meta' => $meta,
                 'usd' => (float) $row->amount_usd,
-                'href' => route('expenses.index', ['month' => $this->month, 'year' => $this->year]),
+                'href' => route('expenses.index', [
+                    'month' => $this->month,
+                    'year' => $this->year,
+                    'open' => $row->id,
+                ]),
             ];
         });
 

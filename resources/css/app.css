@@ -793,6 +793,10 @@ textarea.lb-control {
     background: rgba(16, 22, 30, 0.46);
 }
 
+.lb-scrim {
+    background: rgba(16, 22, 30, 0.46);
+}
+
 .lb-dialog {
     display: flex;
     width: 100%;

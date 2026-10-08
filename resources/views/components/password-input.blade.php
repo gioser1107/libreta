@@ -14,7 +14,7 @@
         type="button"
         class="absolute inset-y-0 end-0 flex items-center pe-3 text-neutral-500"
         @click="show = !show"
-        :aria-label="show ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+        :aria-label="show ? 'Ocultar clave' : 'Mostrar clave'"
         tabindex="-1"
     >
         <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5" aria-hidden="true">

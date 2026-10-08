@@ -76,6 +76,12 @@ new #[Layout('layouts.guest')] class extends Component
                     ¿Olvidaste tu clave?
                 </a>
             @endif
+
+            @if (Route::has('register'))
+                <a class="lb-link" href="{{ route('register') }}" wire:navigate>
+                    Crear cuenta
+                </a>
+            @endif
         </div>
     </form>
 </div>

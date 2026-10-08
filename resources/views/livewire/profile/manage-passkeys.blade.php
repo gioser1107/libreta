@@ -40,7 +40,7 @@ new class extends Component
         $this->validate([
             'password' => ['required', 'string', 'current_password'],
         ], [
-            'password.current_password' => 'La contraseña no coincide.',
+            'password.current_password' => 'La clave no coincide.',
         ]);
 
         session(['auth.password_confirmed_at' => time()]);
@@ -128,10 +128,10 @@ new class extends Component
         @if ($confirming)
             <form wire:submit="confirmPassword" class="lb-stack">
                 <div>
-                    <x-input-label for="passkey_password" value="Contraseña" />
-                    <x-text-input wire:model="password" id="passkey_password" type="password" class="mt-1 block w-full" autocomplete="current-password" />
+                    <x-input-label for="passkey_password" value="Clave" />
+                    <x-password-input wire:model="password" id="passkey_password" class="mt-1" autocomplete="current-password" />
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                    <p class="lb-help">Hace falta tu contraseña una vez. Después el teléfono pide la cara o la huella.</p>
+                    <p class="lb-help">Hace falta tu clave una vez. Después el teléfono pide la cara o la huella.</p>
                 </div>
                 <x-primary-button>Confirmar y continuar</x-primary-button>
             </form>

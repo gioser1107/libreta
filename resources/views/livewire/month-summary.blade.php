@@ -32,7 +32,7 @@
         @else
             <div class="lb-list">
                 @foreach($moves as $move)
-                    <a href="{{ $move['href'] }}" wire:navigate class="lb-entry">
+                    <a href="{{ $move['href'] }}" wire:navigate wire:key="move-{{ $move['kind'] }}-{{ $move['id'] }}" class="lb-entry">
                         <span class="lb-entry-main">
                             <span class="lb-entry-title">{{ $move['concept'] }}</span>
                             <span class="lb-entry-meta">{{ $move['when'] }} · {{ $move['kind'] === 'in' ? 'Ingreso' : 'Egreso' }} · {{ $move['meta'] }}</span>

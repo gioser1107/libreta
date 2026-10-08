@@ -1,4 +1,9 @@
 @php
+    $month = request()->integer('month');
+    $year = request()->integer('year');
+    $period = ($month >= 1 && $month <= 12 && $year >= 2020 && $year <= 2100)
+        ? ['month' => $month, 'year' => $year]
+        : [];
     $links = [
         [
             'route' => 'dashboard',
@@ -28,7 +33,8 @@
     @if($link['can'])
         <a
             wire:navigate
-            href="{{ route($link['route']) }}"
+            data-keep-period
+            href="{{ route($link['route'], $period) }}"
             title="{{ $link['label'] }}"
             @class(['is-active' => $link['active']])
             @if($link['active']) aria-current="page" @endif

@@ -31,7 +31,11 @@
     <section class="lb-panel">
         @if($rows->isEmpty())
             <div class="lb-empty">
-                <p>No hay ingresos en {{ mb_strtolower($months[$month] ?? 'este mes') }} {{ $year }}.</p>
+                @if($search !== '' || $filterCategory !== 'all')
+                    <p>Ningún ingreso coincide.</p>
+                @else
+                    <p>No hay ingresos en {{ mb_strtolower($months[$month] ?? 'este mes') }} {{ $year }}.</p>
+                @endif
                 @can('ingresos.create')
                     <button type="button" wire:click="openModal" class="lb-btn lb-btn-primary">Nuevo</button>
                 @endcan
@@ -40,7 +44,7 @@
             <div class="lb-list">
                 @foreach($rows as $row)
                     @can('ingresos.edit')
-                        <button type="button" wire:click="edit({{ $row->id }})" class="lb-entry">
+                        <button type="button" wire:click="edit({{ $row->id }})" wire:key="income-{{ $row->id }}" class="lb-entry">
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $row->concept }}</span>
                                 <span class="lb-entry-meta">{{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}</span>
@@ -51,7 +55,7 @@
                             </span>
                         </button>
                     @else
-                        <div class="lb-entry">
+                        <div class="lb-entry" wire:key="income-{{ $row->id }}">
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $row->concept }}</span>
                                 <span class="lb-entry-meta">{{ $row->occurred_on->format('d/m/Y') }} · {{ $categories[$row->category] ?? $row->category }}</span>
@@ -61,19 +65,15 @@
                     @endcan
                 @endforeach
             </div>
-
-            @if($rows->hasPages())
-                <div class="lb-pager">{{ $rows->links() }}</div>
-            @endif
         @endif
     </section>
 
     @if($showModal)
-        <div class="lb-overlay" wire:click.self="$set('showModal', false)">
-            <form wire:submit="save" class="lb-dialog" role="dialog" aria-modal="true" aria-labelledby="income-dialog-title" wire:keydown.escape="$set('showModal', false)">
+        <div class="lb-overlay" wire:click.self="closeModal">
+            <form wire:submit="save" class="lb-dialog" role="dialog" aria-modal="true" aria-labelledby="income-dialog-title" wire:keydown.escape="closeModal">
                 <div class="lb-dialog-head">
                     <h2 id="income-dialog-title">{{ $editingId ? 'Editar ingreso' : 'Nuevo ingreso' }}</h2>
-                    <button type="button" wire:click="$set('showModal', false)" class="lb-textbtn">Cerrar</button>
+                    <button type="button" wire:click="closeModal" class="lb-textbtn">Cerrar</button>
                 </div>
                 <div class="lb-form">
                     <label class="lb-field">
@@ -124,7 +124,7 @@
                     @endif
                 </div>
                 <div class="lb-dialog-foot">
-                    <button type="button" wire:click="$set('showModal', false)" class="lb-btn lb-btn-ghost">Cancelar</button>
+                    <button type="button" wire:click="closeModal" class="lb-btn lb-btn-ghost">Cancelar</button>
                     <button type="submit" class="lb-btn lb-btn-primary" wire:loading.attr="disabled" wire:target="save">
                         <span wire:loading.remove wire:target="save">Guardar</span>
                         <span wire:loading wire:target="save">Guardando…</span>

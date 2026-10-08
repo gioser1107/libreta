@@ -15,14 +15,12 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 #[Title('Egresos')]
 class ExpenseLedger extends Component
 {
     use FiltersByMonth;
-    use WithPagination;
 
     public string $search = '';
 
@@ -30,6 +28,9 @@ class ExpenseLedger extends Component
 
     #[Url]
     public string $filterStatus = 'all';
+
+    #[Url]
+    public ?int $open = null;
 
     public bool $showModal = false;
 
@@ -55,22 +56,8 @@ class ExpenseLedger extends Component
     {
         Permissions::authorize('egresos', 'view');
         $this->mountMonth();
-        $this->occurred_on = now()->toDateString();
-    }
-
-    public function updatedSearch(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedFilterCategory(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedFilterStatus(): void
-    {
-        $this->resetPage();
+        $this->occurred_on = $this->dateInViewedMonth();
+        $this->openFromUrl();
     }
 
     public function openModal(): void
@@ -80,21 +67,18 @@ class ExpenseLedger extends Component
         $this->showModal = true;
     }
 
+    public function closeModal(): void
+    {
+        $this->showModal = false;
+        $this->resetForm();
+    }
+
     public function edit(int $expenseId): void
     {
         Permissions::authorize('egresos', 'edit');
         $expense = Expense::query()->ownedBy(auth()->user())->findOrFail($expenseId);
-        $this->editingId = $expense->id;
-        $this->concept = $expense->concept;
-        $this->category = $expense->category;
-        $this->occurred_on = $expense->occurred_on->toDateString();
-        $this->currency = $expense->currency;
-        $this->amount = (string) $expense->amount;
-        $this->payment_method = (string) ($expense->payment_method ?? '');
-        $this->status = $expense->status;
-        $this->notes = (string) ($expense->notes ?? '');
+        $this->fillExpense($expense);
         $this->showModal = true;
-        $this->resetErrorBag();
     }
 
     public function save(RecordExpenseAction $record, UpdateExpenseAction $update): void
@@ -120,16 +104,15 @@ class ExpenseLedger extends Component
             return;
         }
 
-        $this->showModal = false;
-        $this->resetForm();
+        $this->showMonthOf($this->occurred_on);
+        $this->closeModal();
     }
 
     public function delete(int $expenseId, DeleteExpenseAction $delete): void
     {
         try {
             $delete->execute(auth()->user(), $expenseId);
-            $this->showModal = false;
-            $this->resetForm();
+            $this->closeModal();
         } catch (HttpException $e) {
             throw $e;
         } catch (\Throwable $e) {
@@ -151,7 +134,7 @@ class ExpenseLedger extends Component
             ->when($this->filterStatus !== 'all', fn ($query) => $query->where('status', $this->filterStatus));
 
         return view('livewire.expense-ledger', [
-            'rows' => (clone $base)->orderByDesc('occurred_on')->orderByDesc('id')->paginate(10),
+            'rows' => (clone $base)->orderByDesc('occurred_on')->orderByDesc('id')->get(),
             'months' => Calendar::MONTHS,
             'categories' => Expense::CATEGORIES,
             'currencies' => Expense::CURRENCIES,
@@ -183,15 +166,56 @@ class ExpenseLedger extends Component
 
     private function resetForm(): void
     {
+        $this->open = null;
         $this->editingId = null;
         $this->concept = '';
         $this->category = 'comida';
-        $this->occurred_on = now()->toDateString();
+        $this->occurred_on = $this->dateInViewedMonth();
         $this->currency = 'USD';
         $this->amount = '';
         $this->payment_method = '';
         $this->status = Expense::STATUS_PAID;
         $this->notes = '';
+        $this->resetErrorBag();
+    }
+
+    private function openFromUrl(): void
+    {
+        if ($this->open === null) {
+            return;
+        }
+
+        if (! Permissions::check(auth()->user(), 'egresos', 'edit')) {
+            $this->open = null;
+
+            return;
+        }
+
+        $expense = Expense::query()->ownedBy(auth()->user())->find($this->open);
+
+        if ($expense === null) {
+            $this->open = null;
+
+            return;
+        }
+
+        $this->fillExpense($expense);
+        $this->showModal = true;
+    }
+
+    private function fillExpense(Expense $expense): void
+    {
+        $this->open = $expense->id;
+        $this->editingId = $expense->id;
+        $this->concept = $expense->concept;
+        $this->category = $expense->category;
+        $this->occurred_on = $expense->occurred_on->toDateString();
+        $this->currency = $expense->currency;
+        $this->amount = (string) $expense->amount;
+        $this->payment_method = (string) ($expense->payment_method ?? '');
+        $this->status = $expense->status;
+        $this->notes = (string) ($expense->notes ?? '');
+        $this->showMonthOf($this->occurred_on);
         $this->resetErrorBag();
     }
 

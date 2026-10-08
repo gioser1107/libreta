@@ -13,19 +13,21 @@ use App\Support\Calendar;
 use App\Support\Permissions;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 #[Title('Ingresos')]
 class IncomeLedger extends Component
 {
     use FiltersByMonth;
-    use WithPagination;
 
     public string $search = '';
 
     public string $filterCategory = 'all';
+
+    #[Url]
+    public ?int $open = null;
 
     public bool $showModal = false;
 
@@ -47,17 +49,8 @@ class IncomeLedger extends Component
     {
         Permissions::authorize('ingresos', 'view');
         $this->mountMonth();
-        $this->occurred_on = now()->toDateString();
-    }
-
-    public function updatedSearch(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedFilterCategory(): void
-    {
-        $this->resetPage();
+        $this->occurred_on = $this->dateInViewedMonth();
+        $this->openFromUrl();
     }
 
     public function openModal(): void
@@ -67,19 +60,18 @@ class IncomeLedger extends Component
         $this->showModal = true;
     }
 
+    public function closeModal(): void
+    {
+        $this->showModal = false;
+        $this->resetForm();
+    }
+
     public function edit(int $incomeId): void
     {
         Permissions::authorize('ingresos', 'edit');
         $income = Income::query()->ownedBy(auth()->user())->findOrFail($incomeId);
-        $this->editingId = $income->id;
-        $this->concept = $income->concept;
-        $this->category = $income->category;
-        $this->occurred_on = $income->occurred_on->toDateString();
-        $this->currency = $income->currency;
-        $this->amount = (string) $income->amount;
-        $this->notes = (string) ($income->notes ?? '');
+        $this->fillIncome($income);
         $this->showModal = true;
-        $this->resetErrorBag();
     }
 
     public function save(RecordIncomeAction $record, UpdateIncomeAction $update): void
@@ -105,16 +97,15 @@ class IncomeLedger extends Component
             return;
         }
 
-        $this->showModal = false;
-        $this->resetForm();
+        $this->showMonthOf($this->occurred_on);
+        $this->closeModal();
     }
 
     public function delete(int $incomeId, DeleteIncomeAction $delete): void
     {
         try {
             $delete->execute(auth()->user(), $incomeId);
-            $this->showModal = false;
-            $this->resetForm();
+            $this->closeModal();
         } catch (HttpException $e) {
             throw $e;
         } catch (\Throwable $e) {
@@ -135,7 +126,7 @@ class IncomeLedger extends Component
             ->when($this->filterCategory !== 'all', fn ($query) => $query->where('category', $this->filterCategory));
 
         return view('livewire.income-ledger', [
-            'rows' => (clone $base)->orderByDesc('occurred_on')->orderByDesc('id')->paginate(10),
+            'rows' => (clone $base)->orderByDesc('occurred_on')->orderByDesc('id')->get(),
             'months' => Calendar::MONTHS,
             'categories' => Income::CATEGORIES,
             'currencies' => Income::CURRENCIES,
@@ -162,13 +153,52 @@ class IncomeLedger extends Component
 
     private function resetForm(): void
     {
+        $this->open = null;
         $this->editingId = null;
         $this->concept = '';
         $this->category = 'sueldo';
-        $this->occurred_on = now()->toDateString();
+        $this->occurred_on = $this->dateInViewedMonth();
         $this->currency = 'USD';
         $this->amount = '';
         $this->notes = '';
+        $this->resetErrorBag();
+    }
+
+    private function openFromUrl(): void
+    {
+        if ($this->open === null) {
+            return;
+        }
+
+        if (! Permissions::check(auth()->user(), 'ingresos', 'edit')) {
+            $this->open = null;
+
+            return;
+        }
+
+        $income = Income::query()->ownedBy(auth()->user())->find($this->open);
+
+        if ($income === null) {
+            $this->open = null;
+
+            return;
+        }
+
+        $this->fillIncome($income);
+        $this->showModal = true;
+    }
+
+    private function fillIncome(Income $income): void
+    {
+        $this->open = $income->id;
+        $this->editingId = $income->id;
+        $this->concept = $income->concept;
+        $this->category = $income->category;
+        $this->occurred_on = $income->occurred_on->toDateString();
+        $this->currency = $income->currency;
+        $this->amount = (string) $income->amount;
+        $this->notes = (string) ($income->notes ?? '');
+        $this->showMonthOf($this->occurred_on);
         $this->resetErrorBag();
     }
 

@@ -53,8 +53,8 @@ class MonthBalanceService
             'expense_pending_usd' => $pendingUsd,
             'balance_usd' => round($incomeUsd - $expenseUsd, 2),
             'balance_ves' => round($incomeVes - $expenseVes, 2),
-            'incomes' => (clone $incomes)->orderByDesc('occurred_on')->orderByDesc('id')->limit(8)->get(),
-            'expenses' => (clone $expenses)->orderByDesc('occurred_on')->orderByDesc('id')->limit(8)->get(),
+            'incomes' => (clone $incomes)->orderByDesc('occurred_on')->orderByDesc('id')->get(),
+            'expenses' => (clone $expenses)->orderByDesc('occurred_on')->orderByDesc('id')->get(),
         ];
     }
 }
