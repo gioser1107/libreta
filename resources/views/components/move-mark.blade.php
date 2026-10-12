@@ -9,7 +9,7 @@
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.25">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m0 0l-6-6m6 6l6-6"/>
         </svg>
-    @elseif ($kind === 'move')
+    @elseif ($kind === 'move' || $kind === 'swap')
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.25">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m0 0l-6-6m6 6l-6 6"/>
         </svg>

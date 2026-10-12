@@ -1,7 +1,10 @@
 <div class="lb-page">
     <header class="lb-head lb-head-period">
         <div class="lb-head-row">
-            <h1>Egresos</h1>
+            <div>
+                <x-back :href="route('dashboard', ['month' => $month, 'year' => $year])" />
+                <h1>Egresos</h1>
+            </div>
             @can('egresos.create')
                 <button type="button" wire:click="openModal" class="lb-btn lb-btn-primary">Nuevo egreso</button>
             @endcan
@@ -94,8 +97,8 @@
         <div class="lb-overlay" wire:click.self="closeModal">
             <form wire:submit="save" class="lb-dialog" role="dialog" aria-modal="true" aria-labelledby="expense-dialog-title" wire:keydown.escape="closeModal">
                 <div class="lb-dialog-head">
+                    <x-back wire:click="closeModal" />
                     <h2 id="expense-dialog-title">{{ $editingId ? 'Editar egreso' : 'Nuevo egreso' }}</h2>
-                    <button type="button" wire:click="closeModal" class="lb-textbtn">Cerrar</button>
                 </div>
                 <div class="lb-form">
                     <label class="lb-field">

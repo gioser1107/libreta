@@ -3,6 +3,7 @@
 namespace App\Services\Ledger;
 
 use App\Models\Bank;
+use App\Models\CurrencyExchange;
 use App\Models\Expense;
 use App\Models\Income;
 use App\Models\Transfer;
@@ -29,8 +30,9 @@ class BankBalanceService
         );
         $incoming = $this->grouped(Transfer::query()->ownedBy($user), 'to_bank_id');
         $outgoing = $this->grouped(Transfer::query()->ownedBy($user), 'from_bank_id');
+        $exchanges = $this->exchangeDeltas($user);
 
-        return $banks->map(function (Bank $bank) use ($income, $paid, $incoming, $outgoing): array {
+        return $banks->map(function (Bank $bank) use ($income, $paid, $incoming, $outgoing, $exchanges): array {
             $balances = [];
 
             foreach (['VES' => 'opening_ves', 'USD' => 'opening_usd', 'EUR' => 'opening_eur'] as $currency => $opening) {
@@ -40,7 +42,8 @@ class BankBalanceService
                     + ($income[$key] ?? 0)
                     - ($paid[$key] ?? 0)
                     + ($incoming[$key] ?? 0)
-                    - ($outgoing[$key] ?? 0),
+                    - ($outgoing[$key] ?? 0)
+                    + ($exchanges[$key] ?? 0),
                     2,
                 );
             }
@@ -85,6 +88,32 @@ class BankBalanceService
 
         foreach ($rows as $row) {
             $map[$row->getAttribute($bankColumn).'|'.$row->currency] = (float) $row->total;
+        }
+
+        return $map;
+    }
+
+    /**
+     * @return array<string, float>
+     */
+    private function exchangeDeltas(User $user): array
+    {
+        $rows = CurrencyExchange::query()
+            ->ownedBy($user)
+            ->get(['from_bank_id', 'paid_currency', 'paid_amount', 'received_currency', 'received_amount']);
+
+        $map = [];
+
+        foreach ($rows as $row) {
+            if ($row->paid_currency === 'VES') {
+                $key = $row->from_bank_id.'|VES';
+                $map[$key] = ($map[$key] ?? 0) - (float) $row->paid_amount;
+            }
+
+            if ($row->received_currency === 'VES') {
+                $key = $row->from_bank_id.'|VES';
+                $map[$key] = ($map[$key] ?? 0) + (float) $row->received_amount;
+            }
         }
 
         return $map;

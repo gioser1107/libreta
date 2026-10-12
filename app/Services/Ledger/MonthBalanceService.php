@@ -2,6 +2,7 @@
 
 namespace App\Services\Ledger;
 
+use App\Models\CurrencyExchange;
 use App\Models\Expense;
 use App\Models\Income;
 use App\Models\User;
@@ -22,6 +23,8 @@ class MonthBalanceService
      *     expense_pending_usd: float,
      *     balance_usd: float,
      *     balance_ves: float,
+     *     exchange_spread_usd: float,
+     *     exchange_spread_ves: float,
      *     opening_usd: float,
      *     opening_ves: float,
      *     available_usd: float,
@@ -45,8 +48,10 @@ class MonthBalanceService
         $expenseVes = round((float) (clone $expenses)->sum('amount_ves'), 2);
         $paidUsd = round((float) (clone $expenses)->where('status', Expense::STATUS_PAID)->sum('amount_usd'), 2);
         $pendingUsd = round((float) (clone $expenses)->where('status', Expense::STATUS_PENDING)->sum('amount_usd'), 2);
-        $balanceUsd = round($incomeUsd - $expenseUsd, 2);
-        $balanceVes = round($incomeVes - $expenseVes, 2);
+        $spreadUsd = $this->spread($user, $from, $to, 'spread_usd');
+        $spreadVes = $this->spread($user, $from, $to, 'spread_ves');
+        $balanceUsd = round($incomeUsd - $expenseUsd - $spreadUsd, 2);
+        $balanceVes = round($incomeVes - $expenseVes - $spreadVes, 2);
         $opening = $this->openingBalance($user, $from);
 
         return [
@@ -60,6 +65,8 @@ class MonthBalanceService
             'expense_pending_usd' => $pendingUsd,
             'balance_usd' => $balanceUsd,
             'balance_ves' => $balanceVes,
+            'exchange_spread_usd' => $spreadUsd,
+            'exchange_spread_ves' => $spreadVes,
             'opening_usd' => $opening['usd'],
             'opening_ves' => $opening['ves'],
             'available_usd' => round($opening['usd'] + $balanceUsd, 2),
@@ -80,10 +87,25 @@ class MonthBalanceService
         $incomeVes = round((float) Income::query()->ownedBy($user)->where('occurred_on', '<', $from)->sum('amount_ves'), 2);
         $expenseUsd = round((float) Expense::query()->ownedBy($user)->where('occurred_on', '<', $from)->sum('amount_usd'), 2);
         $expenseVes = round((float) Expense::query()->ownedBy($user)->where('occurred_on', '<', $from)->sum('amount_ves'), 2);
+        $spreadUsd = $this->spread($user, null, $from, 'spread_usd');
+        $spreadVes = $this->spread($user, null, $from, 'spread_ves');
 
         return [
-            'usd' => round($incomeUsd - $expenseUsd, 2),
-            'ves' => round($incomeVes - $expenseVes, 2),
+            'usd' => round($incomeUsd - $expenseUsd - $spreadUsd, 2),
+            'ves' => round($incomeVes - $expenseVes - $spreadVes, 2),
         ];
+    }
+
+    private function spread(User $user, ?string $from, string $to, string $column): float
+    {
+        $query = CurrencyExchange::query()->ownedBy($user);
+
+        if ($from === null) {
+            $query->where('occurred_on', '<', $to);
+        } else {
+            $query->whereBetween('occurred_on', [$from, $to]);
+        }
+
+        return round((float) $query->sum($column), 2);
     }
 }

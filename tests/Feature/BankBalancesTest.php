@@ -103,7 +103,8 @@ class BankBalancesTest extends TestCase
             ->call('save')
             ->assertHasNoErrors()
             ->assertSee('Banesco')
-            ->assertSee('$ 40,50 · € 3,00');
+            ->assertSee('$ 40,50')
+            ->assertSee('€ 3,00');
 
         $bank = Bank::query()->first();
         $this->assertNotNull($bank);

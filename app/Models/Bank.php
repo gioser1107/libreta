@@ -53,6 +53,11 @@ class Bank extends Model
         return $this->hasMany(Transfer::class, 'to_bank_id');
     }
 
+    public function exchangesFrom(): HasMany
+    {
+        return $this->hasMany(CurrencyExchange::class, 'from_bank_id');
+    }
+
     public function recurringEntries(): HasMany
     {
         return $this->hasMany(RecurringEntry::class);
@@ -69,6 +74,7 @@ class Bank extends Model
             || $this->expenses()->exists()
             || $this->transfersFrom()->exists()
             || $this->transfersTo()->exists()
+            || $this->exchangesFrom()->exists()
             || $this->recurringEntries()->exists();
     }
 

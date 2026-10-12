@@ -26,7 +26,9 @@ class TransfersTest extends TestCase
         $this->actingAs($user)
             ->get(route('banks'))
             ->assertOk()
-            ->assertSee('Pasar entre bancos')
+            ->assertSee('Traspasos')
+            ->assertSee('Pasar')
+            ->assertDontSee('Pasar entre bancos')
             ->assertSeeLivewire(Transfers::class);
 
         $this->actingAs($user)
@@ -37,6 +39,19 @@ class TransfersTest extends TestCase
     public function test_guest_cannot_open_transfers(): void
     {
         Livewire::test(Transfers::class)->assertForbidden();
+    }
+
+    public function test_the_transfer_form_opens_in_a_modal(): void
+    {
+        $user = $this->usuario();
+
+        Livewire::actingAs($user)
+            ->test(Transfers::class)
+            ->assertDontSee('Pasar entre bancos')
+            ->call('openModal')
+            ->assertSee('Pasar entre bancos')
+            ->assertSee('Desde')
+            ->assertSee('Hacia');
     }
 
     public function test_transfer_moves_the_balance_and_does_not_count_as_income_or_expense(): void

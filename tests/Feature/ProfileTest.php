@@ -21,12 +21,14 @@ class ProfileTest extends TestCase
             ->assertSee('Perfil')
             ->assertSee('Cada mes')
             ->assertSee('Ajustes')
+            ->assertSee('Atrás')
             ->assertDontSee('Mis bancos')
             ->assertDontSee('Pasar entre bancos');
 
         $this->actingAs($user)
             ->get(route('profile', ['seccion' => 'perfil']))
             ->assertOk()
+            ->assertSee('Atrás')
             ->assertSeeVolt('profile.update-profile-information-form');
 
         $this->actingAs($user)

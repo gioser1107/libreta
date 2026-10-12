@@ -5,9 +5,11 @@ namespace Tests\Feature;
 use App\Actions\Ledger\DeleteExpenseBudgetAction;
 use App\Actions\Ledger\RecordExpenseAction;
 use App\Actions\Ledger\SaveExpenseBudgetAction;
+use App\Livewire\ExpenseBudgets;
 use App\Livewire\MonthSummary;
 use App\Models\ExpenseBudget;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -17,7 +19,7 @@ class ExpenseBudgetsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_summary_shows_when_a_category_passes_its_cap(): void
+    public function test_a_passed_cap_shows_on_its_page_and_not_on_the_summary(): void
     {
         $user = $this->usuario();
         $this->bcv('2026-10-08', 100, 110);
@@ -33,18 +35,32 @@ class ExpenseBudgetsTest extends TestCase
             'notes' => null,
         ]);
 
+        Carbon::setTestNow(Carbon::parse('2026-10-12 09:00:00', 'America/Caracas'));
+
         Livewire::actingAs($user)
-            ->test(MonthSummary::class)
-            ->set('month', 10)
-            ->set('year', 2026)
+            ->test(ExpenseBudgets::class)
             ->set('budgetCategory', 'comida')
             ->set('budgetAmount', '80')
             ->call('saveBudget')
             ->assertHasNoErrors()
             ->assertSee('$ 100,00 de $ 80,00')
-            ->assertSee('pasado')
+            ->assertSee('pasado');
+
+        Livewire::actingAs($user)
+            ->test(MonthSummary::class)
+            ->set('month', 10)
+            ->set('year', 2026)
+            ->assertSee('Comida')
+            ->assertDontSee('Poner tope')
+            ->assertDontSee('$ 100,00 de $ 80,00')
+            ->assertDontSee('pasado');
+
+        Livewire::actingAs($user)
+            ->test(ExpenseBudgets::class)
             ->call('clearBudget', 'comida')
             ->assertDontSee('pasado');
+
+        Carbon::setTestNow();
 
         $this->assertSame(0, ExpenseBudget::query()->count());
     }
@@ -54,7 +70,7 @@ class ExpenseBudgetsTest extends TestCase
         $user = $this->usuario();
 
         Livewire::actingAs($user)
-            ->test(MonthSummary::class)
+            ->test(ExpenseBudgets::class)
             ->set('budgetCategory', 'comida')
             ->set('budgetAmount', '0')
             ->call('saveBudget')
@@ -68,7 +84,7 @@ class ExpenseBudgetsTest extends TestCase
         $user = $this->usuario();
 
         Livewire::actingAs($user)
-            ->test(MonthSummary::class)
+            ->test(ExpenseBudgets::class)
             ->set('budgetCategory', 'nope')
             ->set('budgetAmount', '80')
             ->call('saveBudget')
@@ -110,6 +126,87 @@ class ExpenseBudgetsTest extends TestCase
     {
         Livewire::actingAs(User::factory()->create())
             ->test(MonthSummary::class)
+            ->assertForbidden();
+    }
+
+    public function test_caps_live_on_their_own_account_page(): void
+    {
+        $user = $this->usuario();
+
+        $this->actingAs($user)
+            ->get(route('profile'))
+            ->assertOk()
+            ->assertSee('Topes');
+
+        $this->actingAs($user)
+            ->get(route('profile', ['seccion' => 'topes']))
+            ->assertOk()
+            ->assertSee('Todavía no hay topes.')
+            ->assertSee('Nuevo')
+            ->assertDontSee('Nuevo tope')
+            ->assertDontSee('En qué se fue');
+    }
+
+    public function test_the_cap_form_opens_in_a_modal(): void
+    {
+        $user = $this->usuario();
+        $this->actingAs($user);
+        app(SaveExpenseBudgetAction::class)->execute($user, 'comida', '80');
+
+        Livewire::actingAs($user)
+            ->test(ExpenseBudgets::class)
+            ->assertDontSee('Nuevo tope')
+            ->call('openModal')
+            ->assertSee('Nuevo tope')
+            ->assertSee('Tope en dólares')
+            ->call('closeModal')
+            ->call('edit', 'comida')
+            ->assertSee('Editar tope')
+            ->assertSet('budgetAmount', '80');
+    }
+
+    public function test_a_rejected_move_leaves_the_cap_where_it_was(): void
+    {
+        $user = $this->usuario();
+        $this->actingAs($user);
+        app(SaveExpenseBudgetAction::class)->execute($user, 'comida', '80');
+
+        Livewire::actingAs($user)
+            ->test(ExpenseBudgets::class)
+            ->call('edit', 'comida')
+            ->set('budgetCategory', 'ocio')
+            ->set('budgetAmount', '0')
+            ->call('saveBudget')
+            ->assertHasErrors(['limit_usd' => 'El tope debe ser mayor a 0.']);
+
+        $this->assertEqualsWithDelta(80.0, (float) ExpenseBudget::query()->where('category', 'comida')->value('limit_usd'), 0.001);
+        $this->assertSame(0, ExpenseBudget::query()->where('category', 'ocio')->count());
+    }
+
+    public function test_moving_a_cap_keeps_a_single_category(): void
+    {
+        $user = $this->usuario();
+        $this->actingAs($user);
+        app(SaveExpenseBudgetAction::class)->execute($user, 'comida', '80');
+
+        Livewire::actingAs($user)
+            ->test(ExpenseBudgets::class)
+            ->call('edit', 'comida')
+            ->set('budgetCategory', 'ocio')
+            ->set('budgetAmount', '90')
+            ->call('saveBudget')
+            ->assertHasNoErrors()
+            ->assertSee('Ocio')
+            ->assertDontSee('Comida');
+
+        $this->assertSame(0, ExpenseBudget::query()->where('category', 'comida')->count());
+        $this->assertEqualsWithDelta(90.0, (float) ExpenseBudget::query()->where('category', 'ocio')->value('limit_usd'), 0.001);
+    }
+
+    public function test_a_user_without_permission_cannot_open_the_caps(): void
+    {
+        Livewire::actingAs(User::factory()->create())
+            ->test(ExpenseBudgets::class)
             ->assertForbidden();
     }
 }

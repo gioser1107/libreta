@@ -429,6 +429,13 @@ html.dark .lb-switch-knob {
     width: 100%;
 }
 
+.lb-head-actions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.45rem;
+}
+
 .lb-head h1,
 .lb-guest-title,
 .lb-section-title {
@@ -505,6 +512,12 @@ html.dark .lb-switch-knob {
     background: transparent;
 }
 
+.lb-stats.is-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
 .lb-stat {
     display: block;
     min-width: 6.5rem;
@@ -512,6 +525,19 @@ html.dark .lb-switch-knob {
     background: transparent;
     color: inherit;
     text-decoration: none;
+}
+
+.lb-stats.is-3 .lb-stat {
+    display: flex;
+    min-width: 0;
+    min-height: 6.35rem;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 0.7rem 0.6rem 0.65rem;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface);
 }
 
 a.lb-stat:hover strong {
@@ -530,6 +556,15 @@ a.lb-stat:hover strong {
     font-size: 0.95rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+}
+
+.lb-stats.is-3 .lb-stat strong {
+    margin-top: auto;
+    padding-top: 0.45rem;
+    font-size: clamp(0.8rem, 3.2vw, 0.95rem);
+    line-height: 1.15;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .lb-stat em {
@@ -665,6 +700,69 @@ a.lb-stat:hover strong {
     max-width: 40rem;
 }
 
+.lb-bank-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.lb-bank-card {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding: 0.9rem 0.95rem;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.lb-bank-card:hover {
+    background: var(--hover);
+}
+
+.lb-bank-card-name {
+    overflow: hidden;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lb-bank-card-figures {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+.lb-bank-card-figures small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 500;
+}
+
+.lb-bank-card-figures strong {
+    display: block;
+    margin-top: 0.12rem;
+    overflow-wrap: anywhere;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 1024px) {
+    .lb-banks-page {
+        max-width: none;
+    }
+}
+
 .lb-stack {
     display: flex;
     flex-direction: column;
@@ -677,23 +775,37 @@ a.lb-stat:hover strong {
     font-size: 0.75rem;
 }
 
-.lb-budget {
+.lb-cap {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 0.95rem;
-    border-top: 1px solid var(--line);
-}
-
-.lb-budget .lb-control {
-    flex: 1 1 8rem;
+    width: 100%;
     min-width: 0;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.75rem 0.95rem;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
 }
 
-.lb-cat-top span.is-over {
-    color: var(--ink);
-    font-weight: 600;
+.lb-cap:last-child {
+    border-bottom: 0;
+}
+
+.lb-cap:hover {
+    background: var(--hover);
+}
+
+.lb-cap .lb-entry-meta {
+    overflow: visible;
+    white-space: normal;
+}
+
+.lb-cap .lb-track {
+    margin-top: 0;
 }
 
 .lb-banks .lb-row-body {
@@ -711,16 +823,37 @@ a.lb-stat:hover strong {
 }
 
 .lb-back {
-    display: inline-block;
-    margin-bottom: 0.15rem;
-    color: var(--muted);
-    font-size: 0.8125rem;
-    font-weight: 500;
+    display: inline-flex;
+    min-height: 2.25rem;
+    align-items: center;
+    gap: 0.1rem;
+    margin: 0 0 0.2rem -0.45rem;
+    padding: 0 0.7rem 0 0.4rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--nav);
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1;
     text-decoration: none;
+    cursor: pointer;
+}
+
+.lb-back svg {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex-shrink: 0;
 }
 
 .lb-back:hover {
+    background: var(--hover);
     color: var(--ink);
+}
+
+.lb-dialog-head .lb-back {
+    margin: 0;
 }
 
 a.lb-row {
@@ -873,6 +1006,8 @@ a.lb-row {
 .lb-entry {
     display: flex;
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     align-items: center;
     gap: 0.75rem;
     padding: 0.55rem 0.75rem;
@@ -898,6 +1033,7 @@ a.lb-row {
 .lb-entry-main {
     min-width: 0;
     flex: 1;
+    overflow: hidden;
 }
 
 .lb-entry-title {
@@ -1149,6 +1285,7 @@ textarea.lb-control {
 }
 
 .lb-dialog-head {
+    justify-content: flex-start;
     border-bottom: 1px solid var(--line);
 }
 
@@ -1927,6 +2064,13 @@ html.dark .lb-splitbar .is-out {
     background: var(--hover);
 }
 
+button.lb-metric {
+    width: 100%;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
 .lb-metric span,
 .lb-metric em,
 .lb-kicker,
@@ -1965,9 +2109,39 @@ html.dark .lb-splitbar .is-out {
     font-variant-numeric: tabular-nums;
 }
 
+.lb-home .lb-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+.lb-home .lb-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    min-height: 6.35rem;
+    padding: 0.7rem 0.6rem 0.65rem;
+}
+
+.lb-home .lb-metric strong {
+    margin-top: auto;
+    padding-top: 0.45rem;
+    font-size: clamp(0.8rem, 3.2vw, 1rem);
+    line-height: 1.15;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.lb-home .lb-metric em {
+    margin-top: 0.18rem;
+    font-size: 0.65rem;
+    line-height: 1.25;
+}
+
 .lb-highlights {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 0.5rem;
     margin-top: 0.5rem;
 }
@@ -1976,6 +2150,7 @@ html.dark .lb-splitbar .is-out {
     display: flex;
     min-width: 0;
     min-height: 6.6rem;
+    overflow: hidden;
     flex-direction: column;
     gap: 0.12rem;
     padding: 0.75rem 0.8rem 0.7rem;
@@ -2002,6 +2177,7 @@ a.lb-highlight:hover {
 .lb-highlight-copy {
     min-width: 0;
     flex: 1;
+    overflow: hidden;
 }
 
 .lb-highlight-title {
@@ -2014,6 +2190,7 @@ a.lb-highlight:hover {
 }
 
 .lb-highlight-meta {
+    display: block;
     overflow: hidden;
     font-size: 0.7rem;
     text-overflow: ellipsis;
@@ -2420,6 +2597,30 @@ html.dark .lb-mark.is-out {
         text-align: left;
     }
 
+    .lb-home .lb-top {
+        grid-template-columns: minmax(17rem, 1.05fr) minmax(0, 1.75fr);
+    }
+
+    .lb-home .lb-top .lb-metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+        height: 100%;
+    }
+
+    .lb-home .lb-top .lb-metric {
+        justify-content: flex-start;
+        min-height: 100%;
+        padding: 0.95rem 0.9rem;
+    }
+
+    .lb-home .lb-top .lb-metric strong {
+        margin-top: auto;
+        padding-top: 0.7rem;
+        font-size: 1.15rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
     .lb-highlight-row {
         flex-wrap: nowrap;
     }
@@ -2488,16 +2689,15 @@ html.dark .lb-mark.is-out {
     }
 
     .lb-stats.is-3 {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 0.75rem;
     }
 
     .lb-stats.is-3 .lb-stat {
         padding: 0.9rem 1rem;
-        border: 1px solid var(--line);
-        border-radius: 1rem;
-        background: var(--surface);
+    }
+
+    .lb-stats.is-3 .lb-stat strong {
+        font-size: 1.05rem;
     }
 
     .lb-filters {

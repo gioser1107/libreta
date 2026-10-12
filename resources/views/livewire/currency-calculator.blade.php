@@ -7,6 +7,7 @@
 >
     <header class="lb-head">
         <div>
+            <x-back :href="route('dashboard')" />
             <h1>Calculadora</h1>
             <p class="lb-help">Convierte con la tasa del día.</p>
         </div>

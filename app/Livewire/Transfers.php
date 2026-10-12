@@ -9,6 +9,7 @@ use App\Models\Bank;
 use App\Models\Income;
 use App\Models\Transfer;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -27,6 +28,8 @@ class Transfers extends Component
     public string $notes = '';
 
     public ?int $confirmingRemovalId = null;
+
+    public bool $showModal = false;
 
     public function mount(): void
     {
@@ -58,6 +61,18 @@ class Transfers extends Component
             return;
         }
 
+        $this->resetForm();
+    }
+
+    #[On('open-transfer')]
+    public function openModal(): void
+    {
+        $this->resetForm();
+        $this->showModal = true;
+    }
+
+    public function closeModal(): void
+    {
         $this->resetForm();
     }
 
@@ -115,6 +130,7 @@ class Transfers extends Component
         $this->amount = '';
         $this->notes = '';
         $this->confirmingRemovalId = null;
+        $this->showModal = false;
         $this->resetErrorBag();
     }
 }

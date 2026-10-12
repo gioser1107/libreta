@@ -41,6 +41,16 @@ class User extends Authenticatable implements PasskeyUser
         return $this->hasMany(Transfer::class);
     }
 
+    public function currencyExchanges(): HasMany
+    {
+        return $this->hasMany(CurrencyExchange::class);
+    }
+
+    public function divisaPlaces(): HasMany
+    {
+        return $this->hasMany(DivisaPlace::class);
+    }
+
     public function recurringEntries(): HasMany
     {
         return $this->hasMany(RecurringEntry::class);

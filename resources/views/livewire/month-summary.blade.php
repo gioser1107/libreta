@@ -37,6 +37,16 @@
         @if($pace['caption'])
             <p class="lb-hero-note">{{ $pace['caption'] }}</p>
         @endif
+
+        @if($summary['exchange_spread_usd'] != 0)
+            <p class="lb-hero-note">
+                @if($summary['exchange_spread_usd'] > 0)
+                    En el cambio perdiste {{ \App\Support\Money::format($summary['exchange_spread_usd'], 'USD') }}
+                @else
+                    En el cambio ganaste {{ \App\Support\Money::format(abs($summary['exchange_spread_usd']), 'USD') }}
+                @endif
+            </p>
+        @endif
     </section>
 
     <section class="lb-metrics" aria-label="Totales del mes">
@@ -96,6 +106,38 @@
                                     <small>Sin saldo</small>
                                 @else
                                     {{ $account['label'] }}
+                                @endif
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </section>
+
+    <section class="lb-block" aria-label="Divisas">
+        <div class="lb-block-head">
+            <h2 class="lb-section-title">Divisas</h2>
+            <a href="{{ route('banks') }}" wire:navigate class="lb-textbtn">Gestionar</a>
+        </div>
+        <div class="lb-panel">
+            @if($holdings === [])
+                <a href="{{ route('banks') }}" wire:navigate class="lb-entry">
+                    <span class="lb-entry-main">
+                        <span class="lb-entry-title">Agrega un lugar</span>
+                    </span>
+                </a>
+            @else
+                <div class="lb-list">
+                    @foreach($holdings as $holding)
+                        <a href="{{ route('banks') }}" wire:navigate wire:key="divisa-{{ $holding['id'] }}" class="lb-entry">
+                            <span class="lb-entry-main">
+                                <span class="lb-entry-title">{{ $holding['label'] }}</span>
+                            </span>
+                            <span class="lb-entry-amt">
+                                {{ \App\Support\Money::format($holding['balances']['USD'], 'USD') }}
+                                @if($holding['balances']['EUR'] != 0)
+                                    <small>{{ \App\Support\Money::format($holding['balances']['EUR'], 'EUR') }}</small>
                                 @endif
                             </span>
                         </a>
@@ -169,37 +211,14 @@
                                 <div wire:key="cat-{{ $category['key'] }}">
                                     <div class="lb-cat-top">
                                         <strong>{{ $category['label'] }}</strong>
-                                        <span @class(['is-over' => $category['over']])>
-                                            @if($category['limit'] !== null)
-                                                {{ \App\Support\Money::format($category['usd'], 'USD') }} de {{ \App\Support\Money::format($category['limit'], 'USD') }}
-                                                @if($category['over'])
-                                                    · pasado
-                                                @endif
-                                            @else
-                                                {{ \App\Support\Money::format($category['usd'], 'USD') }} · {{ $category['share'] }}%
-                                            @endif
-                                        </span>
-                                        @if($category['limit'] !== null)
-                                            <button type="button" wire:click="clearBudget('{{ $category['key'] }}')" class="lb-textbtn">Quitar</button>
-                                        @endif
+                                        <span>{{ \App\Support\Money::format($category['usd'], 'USD') }} · {{ $category['share'] }}%</span>
                                     </div>
                                     <div class="lb-track" aria-hidden="true">
-                                        <span @class(['is-over' => $category['over']]) style="width: {{ $category['width'] }}%"></span>
+                                        <span style="width: {{ $category['width'] }}%"></span>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
-                        <form wire:submit="saveBudget" class="lb-budget">
-                            <select wire:model="budgetCategory" class="lb-control" aria-label="Categoría del tope">
-                                @foreach($budgetCategories as $key => $label)
-                                    <option value="{{ $key }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            <input wire:model="budgetAmount" type="text" inputmode="decimal" class="lb-control" placeholder="Tope en USD" aria-label="Tope en dólares">
-                            <button type="submit" class="lb-btn lb-btn-primary" wire:loading.attr="disabled" wire:target="saveBudget">Poner tope</button>
-                            @error('limit_usd') <span class="lb-error">{{ $message }}</span> @enderror
-                            @error('category') <span class="lb-error">{{ $message }}</span> @enderror
-                        </form>
                     </div>
                 </section>
             @endif
@@ -224,10 +243,14 @@
                             <x-move-mark :kind="$move['kind']" />
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $move['concept'] }}</span>
-                                <span class="lb-entry-meta">{{ $move['when'] }} · {{ $move['kind'] === 'in' ? 'Ingreso' : ($move['kind'] === 'move' ? 'Traspaso' : 'Egreso') }} · {{ $move['meta'] }}</span>
+                                <span class="lb-entry-meta">{{ $move['when'] }} · {{ match ($move['kind']) { 'in' => 'Ingreso', 'move' => 'Traspaso', 'swap' => 'Cambio', default => 'Egreso' } }} · {{ $move['meta'] }}</span>
                             </span>
                             <span class="lb-entry-amt">
-                                {{ $move['kind'] === 'out' ? '−' : ($move['kind'] === 'in' ? '+' : '') }}{{ \App\Support\Money::format($move['usd'], 'USD') }}
+                                @if($move['kind'] === 'swap')
+                                    {{ $move['usd'] > 0 ? '−' : ($move['usd'] < 0 ? '+' : '') }}{{ \App\Support\Money::format(abs($move['usd']), 'USD') }}
+                                @else
+                                    {{ $move['kind'] === 'out' ? '−' : ($move['kind'] === 'in' ? '+' : '') }}{{ \App\Support\Money::format($move['usd'], 'USD') }}
+                                @endif
                                 @if($move['currency'] !== 'USD')
                                     <small>{{ $move['native'] }}</small>
                                 @endif

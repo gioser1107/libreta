@@ -174,6 +174,78 @@ class RecurringEntriesTest extends TestCase
         $this->assertSame('Ajeno', $income->concept);
     }
 
+    public function test_upcoming_fixed_expenses_still_reduce_what_is_left(): void
+    {
+        $user = $this->usuario();
+        $this->on('2026-10-08');
+        $this->bcv('2026-10-01', 100, 110);
+        $this->entry($user, [
+            'concept' => 'Sueldo',
+            'category' => 'sueldo',
+            'amount' => 100,
+            'day_of_month' => 1,
+        ]);
+        $this->entry($user, [
+            'kind' => RecurringEntry::KIND_EXPENSE,
+            'category' => 'vivienda',
+            'concept' => 'Alquiler',
+            'amount' => 40,
+            'day_of_month' => 20,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(RecurringEntries::class)
+            ->assertSee('Te queda')
+            ->assertSee('$ 60,00')
+            ->assertSee('Día 20')
+            ->assertSee('Anotado');
+
+        $this->assertSame(1, Income::query()->count());
+        $this->assertSame(0, Expense::query()->count());
+    }
+
+    public function test_paused_fixed_expenses_do_not_reduce_what_is_left(): void
+    {
+        $user = $this->usuario();
+        $this->on('2026-10-08');
+        $this->bcv('2026-10-08', 100, 110);
+        $this->entry($user, [
+            'concept' => 'Sueldo',
+            'category' => 'sueldo',
+            'amount' => 80,
+            'day_of_month' => 1,
+        ]);
+        $this->entry($user, [
+            'kind' => RecurringEntry::KIND_EXPENSE,
+            'category' => 'vivienda',
+            'concept' => 'Gimnasio',
+            'amount' => 30,
+            'day_of_month' => 3,
+            'active' => false,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(RecurringEntries::class)
+            ->assertSee('$ 80,00')
+            ->assertSee('Pausado')
+            ->assertDontSee('$ 50,00');
+    }
+
+    public function test_editing_a_fixed_entry_opens_it_in_the_dialog(): void
+    {
+        $user = $this->usuario();
+        $this->on('2026-10-08');
+        $this->bcv('2026-10-08', 100, 110);
+        $entry = $this->entry($user, ['concept' => 'Sueldo', 'day_of_month' => 20]);
+
+        Livewire::actingAs($user)
+            ->test(RecurringEntries::class)
+            ->call('edit', $entry->id)
+            ->assertSet('showModal', true)
+            ->assertSet('concept', 'Sueldo')
+            ->assertSee('Editar fijo');
+    }
+
     public function test_a_day_outside_the_month_is_rejected(): void
     {
         $user = $this->usuario();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CurrencyExchange;
 use App\Models\Expense;
 use App\Models\Income;
 use App\Models\Transfer;
@@ -123,6 +124,30 @@ class ExportLedgerController extends Controller
                 ($transfer->fromBank?->name ?? '').' → '.($transfer->toBank?->name ?? ''),
                 null,
                 $transfer->notes,
+            ];
+        }
+
+        $exchanges = CurrencyExchange::query()
+            ->ownedBy($user)
+            ->with(['fromBank', 'divisaPlace'])
+            ->whereBetween('occurred_on', [$from, $to])
+            ->orderBy('occurred_on')
+            ->orderBy('id')
+            ->get();
+
+        foreach ($exchanges as $exchange) {
+            $rows[] = [
+                $exchange->occurred_on->toDateString(),
+                'Cambio',
+                ($exchange->fromBank?->name ?? 'Banco').' → '.$exchange->placeName(),
+                'Cambio',
+                $exchange->paid_currency.' → '.$exchange->received_currency,
+                $exchange->legsLabel(),
+                (string) $exchange->spread_usd,
+                (string) $exchange->spread_ves,
+                ($exchange->fromBank?->name ?? '').' → '.$exchange->placeName(),
+                null,
+                $exchange->spreadSentence(),
             ];
         }
 

@@ -2,15 +2,14 @@
 
 namespace App\Livewire;
 
-use App\Actions\Ledger\DeleteExpenseBudgetAction;
-use App\Actions\Ledger\SaveExpenseBudgetAction;
 use App\Livewire\Concerns\FiltersByMonth;
+use App\Models\CurrencyExchange;
 use App\Models\Expense;
-use App\Models\ExpenseBudget;
 use App\Models\Income;
 use App\Models\Transfer;
 use App\Models\User;
 use App\Services\Ledger\BankBalanceService;
+use App\Services\Ledger\DivisaBalanceService;
 use App\Services\Ledger\MonthBalanceService;
 use App\Services\Ledger\PostRecurringEntries;
 use App\Support\Calendar;
@@ -25,10 +24,6 @@ class MonthSummary extends Component
 {
     use FiltersByMonth;
 
-    public string $budgetCategory = 'comida';
-
-    public string $budgetAmount = '';
-
     public function mount(PostRecurringEntries $poster): void
     {
         Permissions::authorize('ingresos', 'view');
@@ -37,24 +32,14 @@ class MonthSummary extends Component
         $poster->postFor(auth()->user());
     }
 
-    public function saveBudget(SaveExpenseBudgetAction $save): void
-    {
-        $save->execute(auth()->user(), $this->budgetCategory, $this->budgetAmount);
-        $this->budgetAmount = '';
-    }
-
-    public function clearBudget(string $category, DeleteExpenseBudgetAction $delete): void
-    {
-        $delete->execute(auth()->user(), $category);
-    }
-
-    public function render(MonthBalanceService $balance, BankBalanceService $banks)
+    public function render(MonthBalanceService $balance, BankBalanceService $banks, DivisaBalanceService $divisas)
     {
         $user = auth()->user();
         $summary = $balance->summarize($user, $this->year, $this->month);
         $ledger = $this->movements($summary['incomes'], $summary['expenses']);
         $moves = $ledger
             ->concat($this->transferMoves($user, $summary['from'], $summary['to']))
+            ->concat($this->exchangeMoves($user, $summary['from'], $summary['to']))
             ->sortByDesc('stamp')
             ->values();
         $accounts = $banks->forUser($user);
@@ -69,13 +54,10 @@ class MonthSummary extends Component
             'recent' => $moves->take(8),
             'cards' => $this->highlightCards($ledger),
             'incomeCategories' => $this->incomeCategories($summary['incomes']),
-            'categories' => $this->expenseCategories(
-                $summary['expenses'],
-                ExpenseBudget::query()->ownedBy($user)->get(),
-            ),
+            'categories' => $this->expenseCategories($summary['expenses']),
             'pace' => $this->monthPace($summary),
             'accounts' => $accounts,
-            'budgetCategories' => Expense::CATEGORIES,
+            'holdings' => $divisas->forUser($user),
         ])->layout('layouts.app');
     }
 
@@ -258,39 +240,29 @@ class MonthSummary extends Component
 
     /**
      * @param  Collection<int, Expense>  $expenses
-     * @param  Collection<int, ExpenseBudget>  $budgets
-     * @return list<array{key: string, label: string, usd: float, share: int, width: int, limit: ?float, over: bool}>
+     * @return list<array{key: string, label: string, usd: float, share: int, width: int}>
      */
-    private function expenseCategories(Collection $expenses, Collection $budgets): array
+    private function expenseCategories(Collection $expenses): array
     {
         $spent = $expenses
             ->groupBy('category')
             ->map(fn (Collection $rows): float => round((float) $rows->sum('amount_usd'), 2));
-        $limits = $budgets->mapWithKeys(fn (ExpenseBudget $budget): array => [
-            $budget->category => round((float) $budget->limit_usd, 2),
-        ]);
-        $keys = $spent->keys()->merge($limits->keys())->unique();
 
-        if ($keys->isEmpty()) {
+        if ($spent->isEmpty()) {
             return [];
         }
 
         $total = round((float) $spent->sum(), 2);
         $largest = (float) $spent->max();
 
-        return $keys
-            ->map(function (string $category) use ($spent, $limits, $total, $largest): array {
-                $usd = round((float) ($spent[$category] ?? 0), 2);
-                $limit = $limits->has($category) ? (float) $limits[$category] : null;
-
+        return $spent
+            ->map(function (float $usd, string $category) use ($total, $largest): array {
                 return [
                     'key' => $category,
                     'label' => Expense::CATEGORIES[$category] ?? $category,
-                    'usd' => $usd,
+                    'usd' => round($usd, 2),
                     'share' => $total > 0 ? (int) round(($usd / $total) * 100) : 0,
                     'width' => $largest > 0 ? (int) round(($usd / $largest) * 100) : 0,
-                    'limit' => $limit,
-                    'over' => $limit !== null && $usd > $limit,
                 ];
             })
             ->sortByDesc('usd')
@@ -329,6 +301,41 @@ class MonthSummary extends Component
                 (float) $transfer->amount_usd,
                 $transfer->currency,
                 Money::format($transfer->amount, $transfer->currency),
+                route('banks'),
+            ));
+    }
+
+    /**
+     * @return Collection<int, array{
+     *     id: int,
+     *     kind: string,
+     *     stamp: string,
+     *     when: string,
+     *     concept: string,
+     *     meta: string,
+     *     usd: float,
+     *     currency: string,
+     *     native: string,
+     *     href: string
+     * }>
+     */
+    private function exchangeMoves(User $user, string $from, string $to): Collection
+    {
+        return CurrencyExchange::query()
+            ->ownedBy($user)
+            ->with(['fromBank', 'divisaPlace'])
+            ->whereBetween('occurred_on', [$from, $to])
+            ->get()
+            ->map(fn (CurrencyExchange $exchange): array => $this->movement(
+                $exchange->id,
+                'swap',
+                $exchange->occurred_on->format('Y-m-d').sprintf('%08d', $exchange->id),
+                $exchange->occurred_on->translatedFormat('j M'),
+                ($exchange->fromBank?->name ?? 'Banco').' → '.$exchange->placeName(),
+                $exchange->spreadSentence(),
+                (float) $exchange->spread_usd,
+                'VES',
+                $exchange->legsLabel(),
                 route('banks'),
             ));
     }

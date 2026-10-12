@@ -34,8 +34,10 @@ class BankAccountsTest extends TestCase
         $this->actingAs($user)
             ->get(route('banks'))
             ->assertOk()
-            ->assertSee('Mis bancos')
-            ->assertSee('Pasar entre bancos')
+            ->assertSee('Todavía no tienes bancos.')
+            ->assertSee('Nuevo')
+            ->assertSee('Pasar')
+            ->assertDontSee('Nuevo banco')
             ->assertSeeLivewire(BankManager::class);
 
         $this->actingAs($user)
@@ -168,6 +170,18 @@ class BankAccountsTest extends TestCase
             ->assertSee('Banesco');
 
         $this->assertModelExists($bank);
+    }
+
+    public function test_the_new_bank_form_opens_in_a_modal(): void
+    {
+        $user = $this->usuario();
+
+        Livewire::actingAs($user)
+            ->test(BankManager::class)
+            ->assertDontSee('Nuevo banco')
+            ->call('openModal')
+            ->assertSee('Nuevo banco')
+            ->assertSee('Saldo inicial: lo que ya tenías en este banco antes de anotarlo aquí.');
     }
 
     public function test_another_person_cannot_rename_or_see_a_bank(): void

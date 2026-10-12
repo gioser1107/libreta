@@ -89,6 +89,7 @@ Route::middleware('auth')->group(function () {
             'bancos' => 'Bancos',
             'traspasos' => 'Traspasos',
             'fijos' => 'Cada mes',
+            'topes' => 'Topes',
             'ajustes' => 'Ajustes',
         ];
         $section = request()->string('seccion')->toString();
