@@ -41,15 +41,66 @@ class Expense extends Model
     ];
 
     public const CATEGORIES = [
-        'comida' => 'Comida',
-        'transporte' => 'Transporte',
-        'servicios' => 'Servicios',
         'vivienda' => 'Vivienda',
-        'salud' => 'Salud',
-        'educacion' => 'Educación',
-        'hogar' => 'Hogar',
-        'ocio' => 'Ocio',
+        'servicios' => 'Servicios',
+        'alimentacion' => 'Alimentación',
+        'transporte' => 'Transporte',
+        'carro' => 'Carro',
+        'seguros_salud' => 'Seguros y salud',
+        'colegios' => 'Colegios',
+        'cursos' => 'Cursos',
+        'personal_casa' => 'Conductor y doméstica',
+        'celulares' => 'Celulares',
+        'recargos' => 'Recargos',
+        'peluqueria' => 'Peluquería',
+        'manicure' => 'Manicure y pedicure',
+        'pestanas' => 'Pestañas y extensiones',
+        'restaurantes' => 'Restaurantes y cafés',
+        'suscripciones' => 'Suscripciones',
+        'compras' => 'Compras personales',
+        'entretenimiento' => 'Entretenimiento y hobbies',
+        'emergencia' => 'Fondo de emergencia',
+        'deudas' => 'Amortización de deudas',
         'otro' => 'Otro',
+    ];
+
+    /**
+     * Rubros de la libreta, en el orden en que se anotan.
+     *
+     * @var array<string, list<string>>
+     */
+    public const GROUPS = [
+        'Necesidades básicas' => [
+            'vivienda',
+            'servicios',
+            'alimentacion',
+            'transporte',
+            'carro',
+            'seguros_salud',
+            'colegios',
+            'cursos',
+            'personal_casa',
+            'celulares',
+            'recargos',
+        ],
+        'Cuidado personal' => [
+            'peluqueria',
+            'manicure',
+            'pestanas',
+        ],
+        'Estilo de vida' => [
+            'restaurantes',
+            'suscripciones',
+            'compras',
+            'entretenimiento',
+        ],
+        'Meta financiera' => [
+            'emergencia',
+            'deudas',
+        ],
+        'Otros' => [
+            'otro',
+        ],
     ];
 
     public const PAY_CASH = 'efectivo';
@@ -107,6 +158,22 @@ class Expense extends Model
     public static function usesBank(?string $method): bool
     {
         return $method !== null && array_key_exists($method, self::PAYMENT_METHODS);
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    public static function groupedCategories(): array
+    {
+        $grouped = [];
+
+        foreach (self::GROUPS as $group => $keys) {
+            foreach ($keys as $key) {
+                $grouped[$group][$key] = self::CATEGORIES[$key];
+            }
+        }
+
+        return $grouped;
     }
 
     public function scopeOwnedBy(Builder $query, User $user): Builder

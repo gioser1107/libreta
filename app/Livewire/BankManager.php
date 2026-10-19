@@ -8,6 +8,7 @@ use App\Actions\Banks\RenameBankAction;
 use App\Actions\Banks\SetBankOpeningAction;
 use App\Models\Bank;
 use App\Services\Ledger\BankBalanceService;
+use App\Services\Ledger\MoneyQuoteService;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 
@@ -100,7 +101,7 @@ class BankManager extends Component
         $this->showModal = false;
     }
 
-    public function render(BankBalanceService $balances)
+    public function render(BankBalanceService $balances, MoneyQuoteService $quotes)
     {
         $user = auth()->user();
 
@@ -110,6 +111,7 @@ class BankManager extends Component
             'banks' => $accounts->map(fn (array $account): Bank => $account['bank']),
             'balances' => $accounts->keyBy(fn (array $account): int => $account['bank']->id),
             'totals' => $this->totals($accounts),
+            'usdRate' => $quotes->usdRateToVes(now()->toDateString()),
         ]);
     }
 

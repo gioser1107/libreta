@@ -23,6 +23,16 @@ class MoneyQuoteService
      *     currency: string
      * }
      */
+    /**
+     * Tasa de dinero del dólar vigente en esa fecha: 2 decimales, o null si no hay.
+     */
+    public function usdRateToVes(string $onDate): ?float
+    {
+        $rate = BcvRate::forCodeOnOrBefore('USD', $onDate)?->moneyRateToVes();
+
+        return $rate !== null && $rate > 0 ? $rate : null;
+    }
+
     public function quote(string $onDate, string $currency, float|string $amount): array
     {
         $currency = strtoupper($currency);

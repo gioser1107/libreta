@@ -27,7 +27,7 @@ class ExpenseBudgetsTest extends TestCase
         app(RecordExpenseAction::class)->execute($user, [
             'occurred_on' => '2026-10-08',
             'concept' => 'Mercado',
-            'category' => 'comida',
+            'category' => 'alimentacion',
             'currency' => 'USD',
             'amount' => '100',
             'payment_method' => 'efectivo',
@@ -39,7 +39,7 @@ class ExpenseBudgetsTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(ExpenseBudgets::class)
-            ->set('budgetCategory', 'comida')
+            ->set('budgetCategory', 'alimentacion')
             ->set('budgetAmount', '80')
             ->call('saveBudget')
             ->assertHasNoErrors()
@@ -50,14 +50,14 @@ class ExpenseBudgetsTest extends TestCase
             ->test(MonthSummary::class)
             ->set('month', 10)
             ->set('year', 2026)
-            ->assertSee('Comida')
+            ->assertSee('Alimentación')
             ->assertDontSee('Poner tope')
             ->assertDontSee('$ 100,00 de $ 80,00')
             ->assertDontSee('pasado');
 
         Livewire::actingAs($user)
             ->test(ExpenseBudgets::class)
-            ->call('clearBudget', 'comida')
+            ->call('clearBudget', 'alimentacion')
             ->assertDontSee('pasado');
 
         Carbon::setTestNow();
@@ -71,7 +71,7 @@ class ExpenseBudgetsTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(ExpenseBudgets::class)
-            ->set('budgetCategory', 'comida')
+            ->set('budgetCategory', 'alimentacion')
             ->set('budgetAmount', '0')
             ->call('saveBudget')
             ->assertHasErrors(['limit_usd' => 'El tope debe ser mayor a 0.']);
@@ -98,10 +98,10 @@ class ExpenseBudgetsTest extends TestCase
         $owner = $this->usuario();
         $other = $this->usuario();
         $this->actingAs($owner);
-        app(SaveExpenseBudgetAction::class)->execute($owner, 'comida', '40');
+        app(SaveExpenseBudgetAction::class)->execute($owner, 'alimentacion', '40');
         $this->actingAs($other);
 
-        app(DeleteExpenseBudgetAction::class)->execute($other, 'comida');
+        app(DeleteExpenseBudgetAction::class)->execute($other, 'alimentacion');
 
         $this->assertEqualsWithDelta(40.0, (float) ExpenseBudget::query()->where('user_id', $owner->id)->value('limit_usd'), 0.001);
     }
@@ -113,7 +113,7 @@ class ExpenseBudgetsTest extends TestCase
         $this->actingAs($other);
 
         try {
-            app(SaveExpenseBudgetAction::class)->execute($owner, 'comida', '40');
+            app(SaveExpenseBudgetAction::class)->execute($owner, 'alimentacion', '40');
             $this->fail('A foreign user was able to save a cap.');
         } catch (HttpException $exception) {
             $this->assertSame(403, $exception->getStatusCode());
@@ -151,7 +151,7 @@ class ExpenseBudgetsTest extends TestCase
     {
         $user = $this->usuario();
         $this->actingAs($user);
-        app(SaveExpenseBudgetAction::class)->execute($user, 'comida', '80');
+        app(SaveExpenseBudgetAction::class)->execute($user, 'alimentacion', '80');
 
         Livewire::actingAs($user)
             ->test(ExpenseBudgets::class)
@@ -160,7 +160,7 @@ class ExpenseBudgetsTest extends TestCase
             ->assertSee('Nuevo tope')
             ->assertSee('Tope en dólares')
             ->call('closeModal')
-            ->call('edit', 'comida')
+            ->call('edit', 'alimentacion')
             ->assertSee('Editar tope')
             ->assertSet('budgetAmount', '80');
     }
@@ -169,38 +169,38 @@ class ExpenseBudgetsTest extends TestCase
     {
         $user = $this->usuario();
         $this->actingAs($user);
-        app(SaveExpenseBudgetAction::class)->execute($user, 'comida', '80');
+        app(SaveExpenseBudgetAction::class)->execute($user, 'alimentacion', '80');
 
         Livewire::actingAs($user)
             ->test(ExpenseBudgets::class)
-            ->call('edit', 'comida')
-            ->set('budgetCategory', 'ocio')
+            ->call('edit', 'alimentacion')
+            ->set('budgetCategory', 'entretenimiento')
             ->set('budgetAmount', '0')
             ->call('saveBudget')
             ->assertHasErrors(['limit_usd' => 'El tope debe ser mayor a 0.']);
 
-        $this->assertEqualsWithDelta(80.0, (float) ExpenseBudget::query()->where('category', 'comida')->value('limit_usd'), 0.001);
-        $this->assertSame(0, ExpenseBudget::query()->where('category', 'ocio')->count());
+        $this->assertEqualsWithDelta(80.0, (float) ExpenseBudget::query()->where('category', 'alimentacion')->value('limit_usd'), 0.001);
+        $this->assertSame(0, ExpenseBudget::query()->where('category', 'entretenimiento')->count());
     }
 
     public function test_moving_a_cap_keeps_a_single_category(): void
     {
         $user = $this->usuario();
         $this->actingAs($user);
-        app(SaveExpenseBudgetAction::class)->execute($user, 'comida', '80');
+        app(SaveExpenseBudgetAction::class)->execute($user, 'alimentacion', '80');
 
         Livewire::actingAs($user)
             ->test(ExpenseBudgets::class)
-            ->call('edit', 'comida')
-            ->set('budgetCategory', 'ocio')
+            ->call('edit', 'alimentacion')
+            ->set('budgetCategory', 'entretenimiento')
             ->set('budgetAmount', '90')
             ->call('saveBudget')
             ->assertHasNoErrors()
-            ->assertSee('Ocio')
-            ->assertDontSee('Comida');
+            ->assertSee('Entretenimiento y hobbies')
+            ->assertDontSee('Alimentación');
 
-        $this->assertSame(0, ExpenseBudget::query()->where('category', 'comida')->count());
-        $this->assertEqualsWithDelta(90.0, (float) ExpenseBudget::query()->where('category', 'ocio')->value('limit_usd'), 0.001);
+        $this->assertSame(0, ExpenseBudget::query()->where('category', 'alimentacion')->count());
+        $this->assertEqualsWithDelta(90.0, (float) ExpenseBudget::query()->where('category', 'entretenimiento')->value('limit_usd'), 0.001);
     }
 
     public function test_a_user_without_permission_cannot_open_the_caps(): void

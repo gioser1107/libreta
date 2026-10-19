@@ -131,9 +131,13 @@
                         <label class="lb-field">
                             <span class="lb-label">Categoría</span>
                             <select wire:model="category" class="lb-control">
-                                @foreach($categories as $key => $label)
-                                    <option value="{{ $key }}">{{ $label }}</option>
-                                @endforeach
+                                @if($kind === 'expense')
+                                    @include('livewire.partials.expense-category-options')
+                                @else
+                                    @foreach($categories as $key => $label)
+                                        <option value="{{ $key }}">{{ $label }}</option>
+                                    @endforeach
+                                @endif
                             </select>
                             @error('category') <span class="lb-error">{{ $message }}</span> @enderror
                         </label>

@@ -29,13 +29,13 @@ class BankBalancesTest extends TestCase
         app(RecordIncomeAction::class)->execute($user, $this->money($bank, 'ingreso', 10));
         app(RecordExpenseAction::class)->execute($user, [
             ...$this->money($bank, 'mercado', 4),
-            'category' => 'comida',
+            'category' => 'alimentacion',
             'payment_method' => 'zelle',
             'status' => 'paid',
         ]);
         app(RecordExpenseAction::class)->execute($user, [
             ...$this->money($bank, 'pendiente', 3),
-            'category' => 'comida',
+            'category' => 'alimentacion',
             'payment_method' => 'zelle',
             'status' => 'pending',
         ]);
@@ -59,7 +59,7 @@ class BankBalancesTest extends TestCase
         app(RecordExpenseAction::class)->execute($user, [
             'occurred_on' => '2026-10-08',
             'concept' => 'Café',
-            'category' => 'comida',
+            'category' => 'alimentacion',
             'currency' => 'USD',
             'amount' => '5',
             'payment_method' => null,

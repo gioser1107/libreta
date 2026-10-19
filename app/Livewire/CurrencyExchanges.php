@@ -15,7 +15,6 @@ use App\Models\Income;
 use App\Services\Ledger\DivisaBalanceService;
 use App\Services\Ledger\MoneyQuoteService;
 use Illuminate\Validation\ValidationException;
-use Livewire\Attributes\On;
 use Livewire\Component;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -82,7 +81,6 @@ class CurrencyExchanges extends Component
         $this->resetForm();
     }
 
-    #[On('open-exchange')]
     public function openModal(): void
     {
         $this->resetForm();

@@ -42,7 +42,7 @@ class ExpenseLedger extends Component
 
     public string $concept = '';
 
-    public string $category = 'comida';
+    public string $category = 'alimentacion';
 
     public string $occurred_on = '';
 
@@ -204,7 +204,7 @@ class ExpenseLedger extends Component
         $this->editingId = null;
         $this->confirmingRemoval = false;
         $this->concept = '';
-        $this->category = 'comida';
+        $this->category = 'alimentacion';
         $this->occurred_on = $this->dateInViewedMonth();
         $this->currency = Expense::CURRENCY_VES;
         $this->amount = '';

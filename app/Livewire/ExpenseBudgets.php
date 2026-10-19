@@ -14,7 +14,7 @@ use Livewire\Component;
 
 class ExpenseBudgets extends Component
 {
-    public string $budgetCategory = 'comida';
+    public string $budgetCategory = 'alimentacion';
 
     public string $budgetAmount = '';
 
@@ -186,7 +186,7 @@ class ExpenseBudgets extends Component
         $this->showModal = false;
         $this->editingCategory = null;
         $this->confirmingRemoval = false;
-        $this->budgetCategory = 'comida';
+        $this->budgetCategory = 'alimentacion';
         $this->budgetAmount = '';
         $this->resetErrorBag();
     }

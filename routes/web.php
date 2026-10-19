@@ -79,6 +79,8 @@ Route::middleware('auth')->group(function () {
 
     Route::view('/bancos', 'banks')->name('banks');
 
+    Route::view('/divisas', 'divisas')->name('divisas');
+
     Route::get('/exportar', ExportLedgerController::class)
         ->middleware(['permission:ingresos.view', 'permission:egresos.view'])
         ->name('ledger.export');

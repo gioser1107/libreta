@@ -82,7 +82,7 @@ class PersonalLedgerTest extends TestCase
             ->set('year', 2026)
             ->set('occurred_on', '2026-08-20')
             ->set('concept', 'Mercado')
-            ->set('category', 'comida')
+            ->set('category', 'alimentacion')
             ->set('amount', '50')
             ->set('status', 'paid')
             ->call('save')
@@ -95,6 +95,28 @@ class PersonalLedgerTest extends TestCase
         $expense = Expense::query()->first();
         $this->assertNotNull($expense);
         $this->assertSame('VES', $expense->currency);
+    }
+
+    public function test_expense_form_groups_categories_like_the_household_list(): void
+    {
+        $user = $this->usuario();
+
+        Livewire::actingAs($user)
+            ->test(ExpenseLedger::class)
+            ->assertSet('category', 'alimentacion')
+            ->call('openModal')
+            ->assertSee('Necesidades básicas')
+            ->assertSee('Cuidado personal')
+            ->assertSee('Estilo de vida')
+            ->assertSee('Meta financiera')
+            ->assertSee('Servicios')
+            ->assertSee('Colegios')
+            ->assertSee('Conductor y doméstica')
+            ->assertSee('Peluquería')
+            ->assertSee('Restaurantes y cafés')
+            ->assertSee('Fondo de emergencia')
+            ->assertSee('Amortización de deudas')
+            ->assertDontSee('Comida');
     }
 
     public function test_income_uses_that_days_rate_and_ignores_tomorrow(): void
@@ -132,7 +154,7 @@ class PersonalLedgerTest extends TestCase
         $expense = app(RecordExpenseAction::class)->execute($user, [
             'occurred_on' => '2026-08-20',
             'concept' => 'Mercado',
-            'category' => 'comida',
+            'category' => 'alimentacion',
             'currency' => 'EUR',
             'amount' => '10',
             'payment_method' => 'efectivo',
@@ -217,7 +239,7 @@ class PersonalLedgerTest extends TestCase
         app(RecordExpenseAction::class)->execute($user, [
             ...$payload,
             'concept' => 'Comida',
-            'category' => 'comida',
+            'category' => 'alimentacion',
             'amount' => '4',
             'payment_method' => 'zelle',
             'status' => 'paid',
@@ -338,7 +360,7 @@ class PersonalLedgerTest extends TestCase
         app(RecordExpenseAction::class)->execute($user, [
             'occurred_on' => '2026-10-02',
             'concept' => 'Comida',
-            'category' => 'comida',
+            'category' => 'alimentacion',
             'currency' => 'USD',
             'amount' => '40',
             'payment_method' => 'zelle',
@@ -484,7 +506,7 @@ class PersonalLedgerTest extends TestCase
         return app(RecordExpenseAction::class)->execute($user, [
             'occurred_on' => '2026-08-20',
             'concept' => $concept,
-            'category' => 'comida',
+            'category' => 'alimentacion',
             'currency' => 'USD',
             'amount' => '4',
             'payment_method' => 'efectivo',

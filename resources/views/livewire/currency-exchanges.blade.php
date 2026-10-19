@@ -1,8 +1,16 @@
-<section id="divisas">
-    <div class="lb-block-head">
-        <h2 class="lb-section-title">Divisas</h2>
-        <button type="button" wire:click="openPlaceModal" class="lb-textbtn">Agregar</button>
-    </div>
+<div>
+    <header class="lb-head">
+        <div class="lb-head-row">
+            <div>
+                <x-back :href="route('dashboard')" />
+                <h1>Divisas</h1>
+            </div>
+            <div class="lb-head-actions">
+                <button type="button" wire:click="openModal" class="lb-btn lb-btn-ghost">Cambiar</button>
+                <button type="button" wire:click="openPlaceModal" class="lb-btn lb-btn-primary">Nuevo</button>
+            </div>
+        </div>
+    </header>
 
     @if($holdings !== [])
         <section class="lb-metrics" aria-label="Dólares fuera del banco">
@@ -32,7 +40,7 @@
         @if($holdings === [])
             <div class="lb-empty">
                 <p>Agrega el lugar donde guardas las divisas. Puede llamarse como quieras.</p>
-                <button type="button" wire:click="openPlaceModal" class="lb-btn lb-btn-primary">Agregar</button>
+                <button type="button" wire:click="openPlaceModal" class="lb-btn lb-btn-primary">Nuevo</button>
             </div>
         @elseif($exchanges->isEmpty())
             <div class="lb-empty">

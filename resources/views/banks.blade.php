@@ -2,7 +2,6 @@
     <div class="lb-page lb-banks-page">
         <div class="lb-stack">
             <livewire:bank-manager />
-            <livewire:currency-exchanges />
             <livewire:transfers />
         </div>
     </div>

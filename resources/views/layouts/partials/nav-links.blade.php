@@ -36,6 +36,13 @@
             'icon' => 'M4 10l8-6 8 6M6 10v8h12v-8M10 18v-4h4v4',
         ],
         [
+            'route' => 'divisas',
+            'label' => 'Divisas',
+            'active' => request()->routeIs('divisas'),
+            'can' => true,
+            'icon' => 'M12 4v16M9 8.2c.5-.8 1.6-1.4 3-1.4 1.8 0 3 .9 3 2.1S13.8 11 12 11s-3 .9-3 2.1 1.2 2.1 3 2.1c1.4 0 2.5-.6 3-1.4',
+        ],
+        [
             'route' => 'calculator',
             'label' => 'Calculadora',
             'active' => request()->routeIs('calculator'),

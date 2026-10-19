@@ -60,7 +60,7 @@ class LedgerExportTest extends TestCase
         app(RecordExpenseAction::class)->execute($user, [
             'occurred_on' => '2026-10-08',
             'concept' => '=CMD()',
-            'category' => 'comida',
+            'category' => 'alimentacion',
             'currency' => 'USD',
             'amount' => '4',
             'payment_method' => 'efectivo',

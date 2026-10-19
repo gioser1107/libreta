@@ -342,7 +342,7 @@ class BankAccountsTest extends TestCase
             ->set('year', 2026)
             ->set('occurred_on', '2026-08-20')
             ->set('concept', 'Mercado')
-            ->set('category', 'comida')
+            ->set('category', 'alimentacion')
             ->set('currency', 'USD')
             ->set('amount', '4')
             ->set('payment_method', $method)
@@ -368,7 +368,7 @@ class BankAccountsTest extends TestCase
         $expense = app(RecordExpenseAction::class)->execute($user, [
             'occurred_on' => '2026-08-20',
             'concept' => 'Mercado',
-            'category' => 'comida',
+            'category' => 'alimentacion',
             'currency' => 'USD',
             'amount' => '4',
             'payment_method' => null,
@@ -473,7 +473,7 @@ class BankAccountsTest extends TestCase
         return app(RecordExpenseAction::class)->execute($user, [
             'occurred_on' => '2026-08-20',
             'concept' => 'Mercado',
-            'category' => 'comida',
+            'category' => 'alimentacion',
             'currency' => 'USD',
             'amount' => '4',
             'payment_method' => $method,

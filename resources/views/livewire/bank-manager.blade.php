@@ -6,7 +6,6 @@
                 <h1>Bancos</h1>
             </div>
             <div class="lb-head-actions">
-                <button type="button" wire:click="$dispatch('open-exchange')" class="lb-btn lb-btn-ghost">Cambiar</button>
                 <button type="button" wire:click="$dispatch('open-transfer')" class="lb-btn lb-btn-ghost">Pasar</button>
                 <button type="button" wire:click="openModal" class="lb-btn lb-btn-primary">Nuevo</button>
             </div>
@@ -23,9 +22,18 @@
     @else
         <div class="lb-top">
             <section class="lb-hero" aria-label="Saldo en dólares">
+                @php($dollarsInBolivares = \App\Support\Money::vesEquivalent($totals['USD'], $usdRate))
                 <p class="lb-hero-kicker">En tus bancos</p>
                 <p class="lb-hero-amount">{{ \App\Support\Money::format($totals['USD'], 'USD') }}</p>
-                <p class="lb-hero-note">{{ $banks->count() === 1 ? '1 banco' : $banks->count().' bancos' }}</p>
+                @if($dollarsInBolivares !== null)
+                    <p class="lb-hero-ves">≈ {{ \App\Support\Money::format($dollarsInBolivares, 'VES') }}</p>
+                @endif
+                <p class="lb-hero-note">
+                    {{ $banks->count() === 1 ? '1 banco' : $banks->count().' bancos' }}
+                    @if($dollarsInBolivares !== null)
+                        · tasa de hoy {{ number_format($usdRate, 2, ',', '.') }} Bs por dólar
+                    @endif
+                </p>
             </section>
 
             <section class="lb-metrics" aria-label="Otras monedas">
@@ -42,11 +50,20 @@
 
         <div class="lb-bank-board" aria-label="Saldo de cada banco">
             @foreach($banks as $bank)
-                @php($balance = $balances[$bank->id]['balances'] ?? ['VES' => 0, 'USD' => 0, 'EUR' => 0])
+                @php
+                    $balance = $balances[$bank->id]['balances'] ?? ['VES' => 0, 'USD' => 0, 'EUR' => 0];
+                    $dollarsInBolivares = \App\Support\Money::vesEquivalent($balance['USD'], $usdRate);
+                @endphp
                 <button type="button" wire:key="bank-{{ $bank->id }}" wire:click="edit({{ $bank->id }})" class="lb-bank-card">
                     <span class="lb-bank-card-name">{{ $bank->name }}</span>
                     <span class="lb-bank-card-figures">
-                        <span><small>Dólares</small><strong>{{ \App\Support\Money::format($balance['USD'], 'USD') }}</strong></span>
+                        <span>
+                            <small>Dólares</small>
+                            <strong>{{ \App\Support\Money::format($balance['USD'], 'USD') }}</strong>
+                            @if($dollarsInBolivares !== null)
+                                <em>≈ {{ \App\Support\Money::format($dollarsInBolivares, 'VES') }}</em>
+                            @endif
+                        </span>
                         <span><small>Bolívares</small><strong>{{ \App\Support\Money::format($balance['VES'], 'VES') }}</strong></span>
                         <span><small>Euros</small><strong>{{ \App\Support\Money::format($balance['EUR'], 'EUR') }}</strong></span>
                     </span>

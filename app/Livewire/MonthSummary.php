@@ -10,6 +10,7 @@ use App\Models\Transfer;
 use App\Models\User;
 use App\Services\Ledger\BankBalanceService;
 use App\Services\Ledger\DivisaBalanceService;
+use App\Services\Ledger\MoneyQuoteService;
 use App\Services\Ledger\MonthBalanceService;
 use App\Services\Ledger\PostRecurringEntries;
 use App\Support\Calendar;
@@ -32,7 +33,7 @@ class MonthSummary extends Component
         $poster->postFor(auth()->user());
     }
 
-    public function render(MonthBalanceService $balance, BankBalanceService $banks, DivisaBalanceService $divisas)
+    public function render(MonthBalanceService $balance, BankBalanceService $banks, DivisaBalanceService $divisas, MoneyQuoteService $quotes)
     {
         $user = auth()->user();
         $summary = $balance->summarize($user, $this->year, $this->month);
@@ -57,6 +58,7 @@ class MonthSummary extends Component
             'categories' => $this->expenseCategories($summary['expenses']),
             'pace' => $this->monthPace($summary),
             'accounts' => $accounts,
+            'usdRate' => $quotes->usdRateToVes(now()->toDateString()),
             'holdings' => $divisas->forUser($user),
         ])->layout('layouts.app');
     }
@@ -336,7 +338,7 @@ class MonthSummary extends Component
                 (float) $exchange->spread_usd,
                 'VES',
                 $exchange->legsLabel(),
-                route('banks'),
+                route('divisas'),
             ));
     }
 

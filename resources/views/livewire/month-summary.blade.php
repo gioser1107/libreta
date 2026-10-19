@@ -106,6 +106,10 @@
                                     <small>Sin saldo</small>
                                 @else
                                     {{ $account['label'] }}
+                                    @php($dollarsInBolivares = \App\Support\Money::vesEquivalent($account['balances']['USD'], $usdRate))
+                                    @if($dollarsInBolivares !== null)
+                                        <small>≈ {{ \App\Support\Money::format($dollarsInBolivares, 'VES') }}</small>
+                                    @endif
                                 @endif
                             </span>
                         </a>
@@ -118,11 +122,11 @@
     <section class="lb-block" aria-label="Divisas">
         <div class="lb-block-head">
             <h2 class="lb-section-title">Divisas</h2>
-            <a href="{{ route('banks') }}" wire:navigate class="lb-textbtn">Gestionar</a>
+            <a href="{{ route('divisas') }}" wire:navigate class="lb-textbtn">Gestionar</a>
         </div>
         <div class="lb-panel">
             @if($holdings === [])
-                <a href="{{ route('banks') }}" wire:navigate class="lb-entry">
+                <a href="{{ route('divisas') }}" wire:navigate class="lb-entry">
                     <span class="lb-entry-main">
                         <span class="lb-entry-title">Agrega un lugar</span>
                     </span>
@@ -130,7 +134,7 @@
             @else
                 <div class="lb-list">
                     @foreach($holdings as $holding)
-                        <a href="{{ route('banks') }}" wire:navigate wire:key="divisa-{{ $holding['id'] }}" class="lb-entry">
+                        <a href="{{ route('divisas') }}" wire:navigate wire:key="divisa-{{ $holding['id'] }}" class="lb-entry">
                             <span class="lb-entry-main">
                                 <span class="lb-entry-title">{{ $holding['label'] }}</span>
                             </span>
